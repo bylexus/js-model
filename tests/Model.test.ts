@@ -60,6 +60,14 @@ describe('Model', () => {
             expect(i.alwaysPlusOne).toEqual(6);
             expect(i.get('unknown')).toEqual('foo');
         });
+
+        test('set takes a single key and value', () => {
+            const i = new TestModel();
+            i.set('name', 'singleKey');
+            i.set('upName', 'upSingleKey');
+            expect(i.name).toEqual('singleKey');
+            expect(i.upName).toEqual('UPSINGLEKEY');
+        });
     });
 
     describe('dirty', () => {
@@ -141,14 +149,14 @@ describe('Model', () => {
     describe('mutations', () => {
         test('mutation is called when value is set', () => {
             const i = new TestModel().commit({ name: 'alex', upName: 'upper', alwaysPlusOne: 1 });
-			expect(i.upName).toEqual('UPPER');
-			expect(i.alwaysPlusOne).toEqual(2);
+            expect(i.upName).toEqual('UPPER');
+            expect(i.alwaysPlusOne).toEqual(2);
 
-			i.upName = 'lower';
-			expect(i.upName).toEqual('LOWER');
+            i.upName = 'lower';
+            expect(i.upName).toEqual('LOWER');
 
-			i.alwaysPlusOne = 10;
-			expect(i.alwaysPlusOne).toEqual(11);
+            i.alwaysPlusOne = 10;
+            expect(i.alwaysPlusOne).toEqual(11);
         });
     });
 });

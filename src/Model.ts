@@ -69,8 +69,12 @@ export default abstract class Model {
         return proxyThis;
     }
 
-    public set(data: PropertiesObject): this {
-        Object.assign(this, data);
+    public set(keyOrData: string | PropertiesObject, data?: any): this {
+        if (typeof keyOrData === 'string') {
+            Object.assign(this, { [keyOrData]: data });
+        } else if (typeof keyOrData === 'object') {
+            Object.assign(this, keyOrData);
+        }
         return this;
     }
 
@@ -83,8 +87,7 @@ export default abstract class Model {
         return undefined;
     }
 
-    // protected abstract members(): PropertiesObject;
-    protected mutations(): MutationsObject {
+    public mutations(): MutationsObject {
         return {};
     }
 
