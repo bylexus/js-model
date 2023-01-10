@@ -2,7 +2,7 @@ export type MutationsFn = (value: any) => any;
 export type PropertiesObject = { [key: string]: any };
 export type MutationsObject = { [key: string]: MutationsFn };
 
-const internalModelProps = ['_props', '_dirtyProps'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode'];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -42,11 +42,13 @@ const proxyHandler = {
         if (!Object.keys(target._dirtyProps).includes(prop)) {
             target._dirtyProps[prop] = target[prop];
         }
-        // apply mutation, if available:
-        const mut = target.mutations();
-        if (Object.keys(mut).includes(prop) && typeof mut[prop] === 'function') {
-            const mutFn = mut[prop];
-            newValue = mutFn.apply(receiver, [newValue]);
+        // apply mutation, if not in rollback mode: available:
+        if (target._rollbackMode !== true) {
+            const mut = target.mutations();
+            if (Object.keys(mut).includes(prop) && typeof mut[prop] === 'function') {
+                const mutFn = mut[prop];
+                newValue = mutFn.apply(receiver, [newValue]);
+            }
         }
         target[prop] = newValue;
         return true;
@@ -55,6 +57,8 @@ const proxyHandler = {
 
 export default abstract class Model {
     private _dirtyProps: PropertiesObject;
+    /** set to true during rollback: this allows the proxy to skip certain modifications */
+    private _rollbackMode = false;
 
     public constructor() {
         this._dirtyProps = {};
@@ -72,11 +76,11 @@ export default abstract class Model {
 
     public get(key: string): any {
         for (const [k, val] of Object.entries(this)) {
-            if (k === key ) {
+            if (k === key) {
                 return val;
             }
         }
-        return undefined
+        return undefined;
     }
 
     // protected abstract members(): PropertiesObject;
@@ -96,8 +100,11 @@ export default abstract class Model {
         return this;
     }
 
-    public rollback() {
+    public rollback(): this {
+        this._rollbackMode = true;
         Object.assign(this, this._dirtyProps);
         this._dirtyProps = {};
+        this._rollbackMode = false;
+        return this;
     }
 }
