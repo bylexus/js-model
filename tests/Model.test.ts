@@ -1,6 +1,15 @@
-import { Collection, Model } from '../src/';
+import { exportAllDeclaration } from '@babel/types';
+import { Collection, Model, DataProxy } from '../src/';
 
-class EmptyModel extends Model {}
+class TestCollection extends Collection<TestModel> {
+    public modelCls = TestModel;
+}
+
+class EmptyModel extends Model {
+    public getDataProxy(): DataProxy {
+        return {} as DataProxy;
+    }
+}
 
 class TestModel extends Model {
     id: number | null = null;
@@ -16,6 +25,38 @@ class TestModel extends Model {
             alwaysPlusOne: (val: number) => val + 1,
         };
     }
+
+    public getDataProxy(): DataProxy {
+        return {
+            fetch(m: TestModel): Promise<TestModel> {
+                return new Promise<TestModel>((success, err) => {
+                    // fake timeout and data
+                    setTimeout(() => {
+                        // fail case: if id is -1
+                        if (m.id === -1) {
+                            return err('fail!');
+                        }
+                        m.id = 42;
+                        m.name = 'fetch-test';
+                        m.upName = 'fetch-test';
+                        success(m);
+                    }, 2);
+                });
+            },
+            async create(m: TestModel): Promise<TestModel> {
+                return m;
+            },
+            async update(m: TestModel): Promise<TestModel> {
+                return m;
+            },
+            async delete(m: TestModel): Promise<TestModel> {
+                return m;
+            },
+            async query(collection: TestCollection): Promise<TestCollection> {
+                return collection;
+            },
+        } as DataProxy;
+    }
 }
 
 describe('Model', () => {
@@ -30,6 +71,7 @@ describe('Model', () => {
         expect(i.id).toBeNull();
         expect(i.name).toEqual('leer');
         expect(i.get('unknown')).toBeUndefined();
+        expect(i.isPhantom()).toBeTruthy();
     });
 
     test('default values apply mutations', () => {
@@ -157,6 +199,107 @@ describe('Model', () => {
 
             i.alwaysPlusOne = 10;
             expect(i.alwaysPlusOne).toEqual(11);
+        });
+    });
+
+    describe('phantom', () => {
+        test('new record is a phantom record', () => {
+            const i = new TestModel();
+            expect(i.isPhantom()).toBeTruthy();
+        });
+
+        test('new record stays phantom after modifying/committing', () => {
+            const i = new TestModel().commit({ name: 'Achmed' });
+
+            expect(i.isPhantom()).toBeTruthy();
+        });
+    });
+
+    describe('load', () => {
+        test('load will call the DataProxy::fetch function', async () => {
+            const i = new TestModel();
+            await i
+                .set({
+                    id: 5,
+                    name: 'foo',
+                    upName: 'foo',
+                })
+                .load();
+            expect(i.id).toStrictEqual(42);
+            expect(i.name).toStrictEqual('fetch-test');
+            expect(i.upName).toStrictEqual('FETCH-TEST');
+        });
+
+        test('load makes a record non-phantom', async () => {
+            const i = new TestModel();
+            expect(i.isPhantom()).toBeTruthy();
+            await i
+                .set({
+                    id: 5,
+                })
+                .load();
+            expect(i.isPhantom()).toBeFalsy();
+        });
+
+        test('load will throw an exception on error', async () => {
+            const i = new TestModel();
+            try {
+                await i
+                    .set({
+                        id: -1,
+                    })
+                    .load();
+            } catch (e) {
+                expect(e).toMatch('fail!');
+            }
+        });
+    });
+
+    describe('save', () => {
+        test('save will call DataProxy::create for a new instance', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const updateMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    update: updateMock,
+                } as DataProxy;
+            };
+            i.set({ id: 5, name: 'foo' });
+
+            const ret = await i.save();
+            expect(ret === i).toBeTruthy();
+            expect(createMock.mock.calls).toHaveLength(1);
+            expect(updateMock.mock.calls).toHaveLength(0);
+        });
+
+        test('save will update isPhantom and isDirty', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const updateMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    update: updateMock,
+                } as DataProxy;
+            };
+            i.set({ id: 5, name: 'foo' });
+            expect(i.isPhantom()).toBeTruthy();
+
+            await i.save();
+            expect(i.isDirty()).toBeFalsy();
+            expect(i.isPhantom()).toBeFalsy();
         });
     });
 });

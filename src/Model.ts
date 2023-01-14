@@ -1,8 +1,10 @@
+import DataProxy from './DataProxy';
+
 export type MutationsFn = (value: any) => any;
 export type PropertiesObject = { [key: string]: any };
 export type MutationsObject = { [key: string]: MutationsFn };
 
-const internalModelProps = ['_dirtyProps', '_rollbackMode'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom'];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -60,6 +62,14 @@ export default abstract class Model {
     /** set to true during rollback: this allows the proxy to skip certain modifications */
     private _rollbackMode = false;
 
+    /** if true, it is still an in-memory-only record: it was not saved yet. */
+    private _isPhantom = true;
+
+    /**
+     * Implement in child classes: Must return a DataProxy instance
+     */
+    public abstract getDataProxy(): DataProxy;
+
     public constructor() {
         this._dirtyProps = {};
 
@@ -108,6 +118,44 @@ export default abstract class Model {
         Object.assign(this, this._dirtyProps);
         this._dirtyProps = {};
         this._rollbackMode = false;
+        return this;
+    }
+
+    /**
+     * Phantom means the record only exists in memory, so was neither load or stored from/to a backend.
+     *
+     * @returns true if this is a new, unsaved record, false if it was loaded or saved to/from a backend
+     */
+    public isPhantom(): boolean {
+        return this._isPhantom;
+    }
+
+    /**
+     * Loads the record from a backend.
+     * This operation is handed over to the configured
+     * DataProxy.fetch, which you must configure by implementing
+     * getDataProxy(): DataProxy.
+     *
+     * How the loading is done is completely up to the DataProxy.
+     * The goal is that the actual instance's data is somehow fetched from a backend
+     * and set on the instance. This normally means that the id to load needs
+     * to be set already, elgl like this:
+     * model.set('id', 5).load()
+     */
+    public async load(): Promise<this> {
+        await this.getDataProxy().fetch(this);
+        this._isPhantom = false;
+        return this;
+    }
+
+    public async save(): Promise<this> {
+        if (this.isPhantom()) {
+            await this.getDataProxy().create(this);
+        } else {
+            await this.getDataProxy().update(this);
+        }
+        this.commit();
+        this._isPhantom = false;
         return this;
     }
 }
