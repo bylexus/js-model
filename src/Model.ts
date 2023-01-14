@@ -148,6 +148,16 @@ export default abstract class Model {
         return this;
     }
 
+    /**
+     * Saves the record to a data backend.
+     * This operation is handed over to the configured
+     * DataProxy.create (for phantom records) or DataProxy.update (for non-phantom records).
+     * 
+     * How the storing is done is completely up to the DataProxy.
+     * The goal is that the actual instance's data is somehow stored to a backend.
+     * It is up to the DataProxy to identify the record (by id, e.g), and update its data after
+     * the store returns some new data.
+     */
     public async save(): Promise<this> {
         if (this.isPhantom()) {
             await this.getDataProxy().create(this);
