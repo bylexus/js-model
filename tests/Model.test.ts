@@ -1,5 +1,5 @@
-import { exportAllDeclaration } from '@babel/types';
 import { Collection, Model, DataProxy } from '../src/';
+import { QueryParams } from '../src/SharedTypes';
 
 class TestCollection extends Collection<TestModel> {
     public modelCls = TestModel;
@@ -52,8 +52,8 @@ class TestModel extends Model {
             async delete(m: TestModel): Promise<TestModel> {
                 return m;
             },
-            async query(collection: TestCollection): Promise<TestCollection> {
-                return collection;
+            async query(collection: TestCollection): Promise<TestModel[]> {
+                return [] as TestModel[];
             },
         } as DataProxy;
     }
@@ -230,6 +230,34 @@ describe('Model', () => {
             expect(i.upName).toStrictEqual('FETCH-TEST');
         });
 
+        test('load sends queryParams to DataProxy::fetch', async () => {
+            const i = new TestModel();
+            const fetchMock = jest.fn(async (m: TestModel, p?: QueryParams) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    fetch: fetchMock,
+                } as DataProxy;
+            };
+            await i
+                .set({
+                    id: 5,
+                    name: 'foo',
+                    upName: 'foo',
+                })
+                .load({
+                    p1: 'foo',
+                    p2: true,
+                });
+            expect(fetchMock).toBeCalledTimes(1);
+            expect(fetchMock).toBeCalledWith(i, {
+                p1: 'foo',
+                p2: true,
+            });
+        });
+
         test('load makes a record non-phantom', async () => {
             const i = new TestModel();
             expect(i.isPhantom()).toBeTruthy();
@@ -284,14 +312,10 @@ describe('Model', () => {
             const createMock = jest.fn(async (m: TestModel) => {
                 return m;
             });
-            const updateMock = jest.fn(async (m: TestModel) => {
-                return m;
-            });
             i.getDataProxy = () => {
                 // @ts-ignore: we don't define a proper type here.
                 return {
                     create: createMock,
-                    update: updateMock,
                 } as DataProxy;
             };
             i.set({ id: 5, name: 'foo' });
@@ -300,6 +324,132 @@ describe('Model', () => {
             await i.save();
             expect(i.isDirty()).toBeFalsy();
             expect(i.isPhantom()).toBeFalsy();
+        });
+
+        test('save will send queryParams to DataProxy::create, update', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const updateMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const queryParams = { foo: 'bar', enable: true };
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    update: updateMock,
+                } as DataProxy;
+            };
+            i.set({ id: 5, name: 'foo' });
+            await i.save(queryParams);
+            expect(updateMock).toBeCalledTimes(0);
+            expect(createMock).toBeCalledTimes(1);
+            expect(createMock).toBeCalledWith(i, queryParams);
+            i.set({ name: 'moo' });
+            await i.save(queryParams);
+            expect(updateMock).toBeCalledTimes(1);
+            expect(createMock).toBeCalledTimes(1);
+            expect(updateMock).toBeCalledWith(i, queryParams);
+        });
+    });
+
+    describe('destroy', () => {
+        test('destroy will call DataProxy::delete to delete an instance', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const deleteMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    delete: deleteMock,
+                } as DataProxy;
+            };
+            await i.set({ id: 5, name: 'foo' }).save();
+
+            const ret = await i.destroy();
+
+            expect(ret === i).toBeTruthy();
+            expect(deleteMock.mock.calls).toHaveLength(1);
+            expect(i.isPhantom()).toBeTruthy();
+            expect(i.isDestroyed()).toBeTruthy();
+        });
+
+        test('destroy will NOT call DataProxy::delete if it is a phantom record', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const deleteMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    delete: deleteMock,
+                } as DataProxy;
+            };
+
+            const ret = await i.destroy();
+
+            expect(ret === i).toBeTruthy();
+            expect(deleteMock.mock.calls).toHaveLength(0);
+            expect(i.isPhantom()).toBeTruthy();
+            expect(i.isDestroyed()).toBeFalsy();
+        });
+        test('save after destroy will re-save it', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const deleteMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    delete: deleteMock,
+                } as DataProxy;
+            };
+            await i.save();
+            const ret = await i.destroy();
+            await i.save();
+
+            expect(ret === i).toBeTruthy();
+            expect(deleteMock.mock.calls).toHaveLength(1);
+            expect(createMock.mock.calls).toHaveLength(2);
+            expect(i.isPhantom()).toBeFalsy();
+            expect(i.isDestroyed()).toBeFalsy();
+        });
+        test('destroy will send queryParams to DataProxy::delete', async () => {
+            const i = new TestModel();
+            const createMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const deleteMock = jest.fn(async (m: TestModel) => {
+                return m;
+            });
+            const queryParams = { foo: 'bar', enabled: true };
+            i.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    create: createMock,
+                    delete: deleteMock,
+                } as DataProxy;
+            };
+            await i.set({ id: 5, name: 'foo' }).save();
+            await i.destroy(queryParams);
+
+            expect(deleteMock).toBeCalledTimes(1);
+            expect(deleteMock).toBeCalledWith(i, queryParams);
         });
     });
 });

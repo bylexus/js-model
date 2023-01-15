@@ -1,10 +1,7 @@
-import DataProxy from './DataProxy';
+import DataProxy, { DummyDataProxy } from './DataProxy';
+import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
 
-export type MutationsFn = (value: any) => any;
-export type PropertiesObject = { [key: string]: any };
-export type MutationsObject = { [key: string]: MutationsFn };
-
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed'];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -65,10 +62,16 @@ export default abstract class Model {
     /** if true, it is still an in-memory-only record: it was not saved yet. */
     private _isPhantom = true;
 
+    /** if true, this model instance was deleted using destroy(). */
+    private _isDestroyed = false;
+
     /**
-     * Implement in child classes: Must return a DataProxy instance
+     * Implement in child classes: Must return a DataProxy instance.
+     * The default implementation just reurns a dummy data proxy that does nothing.
      */
-    public abstract getDataProxy(): DataProxy;
+    public getDataProxy(): DataProxy {
+        return new DummyDataProxy();
+    }
 
     public constructor() {
         this._dirtyProps = {};
@@ -130,6 +133,10 @@ export default abstract class Model {
         return this._isPhantom;
     }
 
+    public isDestroyed(): boolean {
+        return this._isDestroyed;
+    }
+
     /**
      * Loads the record from a backend.
      * This operation is handed over to the configured
@@ -142,8 +149,8 @@ export default abstract class Model {
      * to be set already, elgl like this:
      * model.set('id', 5).load()
      */
-    public async load(): Promise<this> {
-        await this.getDataProxy().fetch(this);
+    public async load(queryParams?: QueryParams | null): Promise<this> {
+        await this.getDataProxy().fetch(this, queryParams);
         this._isPhantom = false;
         return this;
     }
@@ -152,20 +159,31 @@ export default abstract class Model {
      * Saves the record to a data backend.
      * This operation is handed over to the configured
      * DataProxy.create (for phantom records) or DataProxy.update (for non-phantom records).
-     * 
+     *
      * How the storing is done is completely up to the DataProxy.
      * The goal is that the actual instance's data is somehow stored to a backend.
      * It is up to the DataProxy to identify the record (by id, e.g), and update its data after
      * the store returns some new data.
      */
-    public async save(): Promise<this> {
+    public async save(queryParams?: QueryParams | null): Promise<this> {
         if (this.isPhantom()) {
-            await this.getDataProxy().create(this);
+            await this.getDataProxy().create(this, queryParams);
         } else {
-            await this.getDataProxy().update(this);
+            await this.getDataProxy().update(this, queryParams);
         }
         this.commit();
         this._isPhantom = false;
+        this._isDestroyed = false;
+        return this;
+    }
+
+    public async destroy(queryParams?: QueryParams | null): Promise<this> {
+        if (!this.isPhantom()) {
+            await this.getDataProxy().delete(this, queryParams);
+            this._isPhantom = true;
+            this._isDestroyed = true;
+        }
+
         return this;
     }
 }
