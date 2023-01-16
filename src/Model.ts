@@ -19,7 +19,6 @@ const proxyHandler = {
             return target[prop];
         }
 
-
         // if a function is called / requested, return it with a bind to the proxy:
         if (typeof target[prop] === 'function') {
             return target[prop].bind(receiver);
@@ -208,11 +207,33 @@ export default abstract class Model {
         return this;
     }
 
-    public getDirtyProps() {
-        // TODO: Implement!
+    public getDirtyProps(): PropertiesObject {
+        const dirty = { ...this._dirtyProps };
+        Object.keys(dirty).forEach((key) => {
+            dirty[key] = this.get(key);
+        });
+        return dirty;
     }
 
-    public getProps() {
-        // TODO: Implement!
+    public getProps(): PropertiesObject {
+        const props = {};
+        // read standard props:
+        Object.keys(this)
+            .filter((k) => !internalModelProps.includes(k))
+            .forEach((k) => {
+                Reflect.set(props, k, this.get(k));
+            });
+        // read getter props:
+        const protoProps = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(this));
+        for (const prop in protoProps) {
+            if (protoProps[prop].get) {
+                Reflect.set(props, prop, Reflect.get(this, prop));
+            }
+        }
+        return props;
+    }
+
+    public toJSON() {
+        return this.getProps();
     }
 }

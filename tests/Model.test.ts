@@ -18,6 +18,10 @@ class TestModel extends Model {
     boolVal: any = 0;
     alwaysPlusOne = 0;
 
+    public get nameLen() {
+        return typeof this.name === 'string' ? this.name.length : 0;
+    }
+
     public mutations() {
         return {
             upName: (val: string | null) => (typeof val === 'string' ? val.toUpperCase() : null),
@@ -453,8 +457,50 @@ describe('Model', () => {
         });
     });
 
-    describe('getClassName()', () => {});
-    describe('getDirtyProps()', () => {});
-    describe('getProps()', () => {});
+    describe('toJSON()', () => {
+        test('only returns non-internal value', () => {
+            const m = new TestModel().set({ name: 'foo', upName: 'bar', alwaysPlusOne: 1 });
+            const res = JSON.parse(JSON.stringify(m));
+            expect(res).toEqual({
+                id: null,
+                name: 'foo',
+                upName: 'BAR',
+                alwaysPlusOne: 2,
+                boolVal: false,
+                nameLen: 3
+            });
+        });
+    });
+
+    describe('getClassName()', () => {
+        // standard class name algorithm:
+        let m = new TestModel();
+        expect(m.getClassName()).toEqual('TestModel');
+
+        // also works when using a different named constructor:
+        const Other = TestModel;
+        m = new Other();
+        expect(m.getClassName()).toEqual('TestModel');
+    });
+
+    describe('getDirtyProps()', () => {
+        test('returns only the dirty props and their values', () => {
+            const m = new TestModel().commit().set({ name: 'Alex', alwaysPlusOne: 10, upName: 'blex' });
+            expect(m.getDirtyProps()).toEqual({ name: 'Alex', alwaysPlusOne: 11, upName: 'BLEX' });
+            m.commit();
+
+            m.set('x', 'y');
+            expect(m.getDirtyProps()).toEqual({ x: 'y' });
+
+            m.commit();
+            expect(m.getDirtyProps()).toEqual({});
+        });
+    });
+
+    describe('getProps()', () => {
+        test('...', () =>{
+            const m = new TestModel();
+        })
+    });
     describe('computedProps()', () => {});
 });

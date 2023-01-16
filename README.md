@@ -112,7 +112,7 @@ const myModel = new TestModel();
 // set some properties:
 myModel.set({
 	id: 42,
-	name 'Alex',
+	name: 'Alex',
 	phone: '+41 79 111 22 33',
 	alwaysPlusOne: 20
 });
