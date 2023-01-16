@@ -7,31 +7,10 @@ const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDe
  * The Proxy Handler intercepts behaviour of the model:
  * it sets up "trap" functions to intercept interactions:
  *
- * get: Property access to the model
  * set: When setting a property, we check if it is defined, apply mutations,
  *      and store the original value for dirty checking / rolling back.
  */
 const proxyHandler = {
-    get(target: PropertiesObject, prop: string, receiver: any): any {
-        // detect if we access a getter function: if yes, return the value:
-        const propInfo = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), prop);
-        if (propInfo && typeof propInfo.get === 'function') {
-            return target[prop];
-        }
-
-        // if a function is called / requested, return it with a bind to the proxy:
-        if (typeof target[prop] === 'function') {
-            return target[prop].bind(receiver);
-        }
-
-        // else return a property:
-        if (Object.keys(target).includes(prop)) {
-            return target[prop];
-        } else {
-            return undefined;
-        }
-    },
-
     set(target: PropertiesObject, prop: string, newValue: any, receiver: any): boolean {
         // model-internal values just get set:
         if (internalModelProps.includes(prop)) {
@@ -62,6 +41,7 @@ const proxyHandler = {
 
 export default abstract class Model {
     private _dirtyProps: PropertiesObject;
+
     /** set to true during rollback: this allows the proxy to skip certain modifications */
     private _rollbackMode = false;
 
