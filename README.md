@@ -13,6 +13,8 @@ with (but not only) reactive frameworks.
 	- [A first model](#a-first-model)
 	- [A first collection](#a-first-collection)
 	- [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
+		- [The DataProxy interface](#the-dataproxy-interface)
+		- [Example DataProxy](#example-dataproxy)
 
 
 ## What is js-model?
@@ -156,7 +158,102 @@ let rm = myCol.remove(one); // or: .remove(1)
 
 ### Implement a storage mechanism using DataProxy
 
-... more to come. This is just a draft.
+Most of the time you want to load / store / query your models from some kind of backend, e.g. via a REST api.
+Because this is highly project- and framework specific, `js-model` does NOT implement this storage backend: Instead,
+it offers you the needed interfaces to allow you to implement it by yourself.
+
+There are several method in the `Model` and `Collection` classes that perform some kind of data load/store operation:
+
+* `Model.load()` loads the content of an entity
+* `Model.save()` saves the entity to a backend
+* `Model.destroy()` deletes the entity to a backend
+* `Collection.query()` fetches models from a backend using a specific query
+
+To allow those operations to work, you need to implement the `getDataProxy()` method: This method must return
+an object implementing the `DataProxy` interface. It is up to you to implement the needed methods, so you are free (and burden with)
+to use whatever storage mechanism you want.
+
+#### The DataProxy interface
+
+The needed interface that `getDataProxy()` needs to return is defined as follows:
+
+```ts
+interface DataProxy {
+	// Fetch data for a single model:
+    fetch<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+	// initial-store a new model:
+    create<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+	// store an exiting model:
+    update<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+	// delete an exiting model:
+    delete<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+	// query for models:
+    query<M extends Model, C extends Collection<M>>(collection: C, queryParams?: QueryParams | null): Promise<M[]>;
+}
+```
+
+This looks complicated, but it's not :-) We will create an example DataProxy right below:
+
+#### Example DataProxy
+
+We will implement a dummy DataProxy object: You _can_ share a single data proxy instance for all your models / collections,
+to save memory, but you _don't have to_: If you e.g. want to implement some kind of specific proxy per model, feel free to do so!
+
+```ts
+import { DataProxy } from 'js-model';
+
+class FakeDataProxy implements DataProxy {
+    async fetch<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+		const data = await api.get(`/${m.getClassName()}/${m.get('id')}`);
+		m.set(data);
+        return m;
+    }
+    async create<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+		const data = await api.post(`/${m.getClassName()}`, m.getProps());
+		m.set(data);
+        return m;
+    }
+    async update<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+		const data = await api.patch(`/${m.getClassName()}/${m.get('id')}`, m.getProps());
+		m.set(data);
+        return m;
+    }
+    async delete<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+		const data = await api.destory(`/${m.getClassName()}/${m.get('id')}`);
+        return m;
+    }
+
+    async query<M extends Model, C extends Collection<M>>(collection: C, queryParams?: QueryParams): Promise<M[]> {
+		const data = await api.query(`/${collection.getModelClassName()}`, queryParams);
+        return res;
+    }
+}
+```
+
+You can now return an instance of this class from your `Model` and `Collection`'s `getDataProxy()` methods:
+
+```ts
+import {Model, Collection, DataProxy} from 'js-model';
+
+class MyModel extends Model {
+	// ....
+
+	public getDataProxy(): DataProxy() {
+		return new FakeDataProxy();
+	}
+}
+
+class MyCollection extends Collection {
+	// ....
+
+	public getDataProxy(): DataProxy() {
+		return new FakeDataProxy();
+	}
+}
+```
+
+Now if you call data fetching / storing / query functions on your models / collections, your apropriate Proxy methods will be called,
+where you are responsible to retrieve / send the data.
 
 
 

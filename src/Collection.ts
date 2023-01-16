@@ -117,4 +117,13 @@ export default abstract class Collection<T extends Model> {
         // TODO: Implement!
         return false;
     }
+
+    public getDirtyProps(): PropertiesObject {
+        // TODO: Implement!
+        return {};
+    }
+
+    public getModelClassName(): string {
+
+    }
 }

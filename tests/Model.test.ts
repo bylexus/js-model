@@ -452,4 +452,8 @@ describe('Model', () => {
             expect(deleteMock).toBeCalledWith(i, queryParams);
         });
     });
+
+    describe('getClassName()', () => {});
+    describe('getDirtyProps()', () => {});
+    describe('getProps()', () => {});
 });

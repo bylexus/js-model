@@ -210,4 +210,13 @@ describe('Collection', () => {
             });
         });
     });
+    
+    describe('find()', () => {});
+    describe('each()', () => {});
+    describe('arrayCopy()', () => {});
+    describe('map()', () => {});
+    describe('filter()', () => {});
+    describe('contains()', () => {});
+    describe('getDirtyProps()', () => {});
+    describe('getModelClassName()', () => {});
 });

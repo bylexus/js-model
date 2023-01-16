@@ -1,7 +1,7 @@
 import DataProxy, { DummyDataProxy } from './DataProxy';
 import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
 
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className'];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -65,6 +65,8 @@ export default abstract class Model {
     /** if true, this model instance was deleted using destroy(). */
     private _isDestroyed = false;
 
+    private _className = '';
+
     /**
      * Implement in child classes: Must return a DataProxy instance.
      * The default implementation just reurns a dummy data proxy that does nothing.
@@ -74,12 +76,24 @@ export default abstract class Model {
     }
 
     public constructor() {
+        this._className = this.constructor.name;
         this._dirtyProps = {};
 
         // set up and return the proxy object:
         const proxyThis = new Proxy(this, proxyHandler as ProxyHandler<this>);
         proxyThis.commit();
         return proxyThis;
+    }
+
+    /**
+     * Returns the class name of this model
+     * Note that you *SHOULD* override this method in child classes if you need
+     * it for e.g. backend entity naming.
+     *
+     * @returns
+     */
+    public getClassName(): string {
+        return this._className;
     }
 
     public set(keyOrData: string | PropertiesObject, data?: any): this {
@@ -185,5 +199,14 @@ export default abstract class Model {
         }
 
         return this;
+    }
+
+    public getDirtyProps() {
+        // TODO: Implement!
+
+    }
+
+    public getProps() {
+        // TODO: Implement!
     }
 }

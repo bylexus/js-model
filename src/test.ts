@@ -1,11 +1,15 @@
-// import { Model, Collection } from './index';
 export {};
+// import Model from "./Model";
 
-// class TestModel extends Model {
-//     public name = 'leer';
+// export class MyModel extends Model {
+//     public id: number | null = 0;
+// 	public name: string | null = '';
+
 // }
 
-// const m = new TestModel();
-// console.log(m.name);
-// m.set('name', 'alex');
-// console.log(m.name);
+// const m = new MyModel().set({
+// 	name: 'foo',
+// 	surname: 'bar'
+// });
+
+// m.name = 'bar';
