@@ -124,6 +124,7 @@ export default abstract class Collection<T extends Model> {
     }
 
     public getModelClassName(): string {
-
+        
+        return '<none>';
     }
 }

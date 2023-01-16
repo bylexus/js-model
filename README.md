@@ -80,10 +80,16 @@ Defining a model is very simple:
 import {Model} from 'js-model';
 
 class TestModel extends Model {
+	// define your properties:
     id: number | null = null;
     name: string | null = '';
 	phone: string | null = '';
     alwaysPlusOne = 0;
+
+	// define calculated values as standard JS getters:
+	public get upperCaseName() {
+		return (this.name || '').toUpperCase();
+	}
 
     public mutations() {
         return {
@@ -94,7 +100,7 @@ class TestModel extends Model {
 }
 ```
 
-This defines a model class with an id, a name, a phone number, and a mysterious property called "alwaysPlusOne".
+This defines a model class with an id, a name, a phone number, a calculated value `upperCaseName` and a mysterious property called "alwaysPlusOne".
 The `mutations()` method allows you to define special setter mutators: simple functions that get the value of a property,
 and mutate the value before storing them internally. In this example, phone gets cleaned of whitespace,
 while "alwaysPlusOne" is incremented by 1 if set.
@@ -121,7 +127,8 @@ This represents an instance of your model with the following values:
 	id: 42,
 	name 'Alex',
 	phone: '+41791112233',
-	alwaysPlusOne: 21
+	alwaysPlusOne: 21,
+	upperCaseName: 'ALEX'
 }
 ```
 

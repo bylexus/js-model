@@ -13,6 +13,13 @@ const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDe
  */
 const proxyHandler = {
     get(target: PropertiesObject, prop: string, receiver: any): any {
+        // detect if we access a getter function: if yes, return the value:
+        const propInfo = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), prop);
+        if (propInfo && typeof propInfo.get === 'function') {
+            return target[prop];
+        }
+
+
         // if a function is called / requested, return it with a bind to the proxy:
         if (typeof target[prop] === 'function') {
             return target[prop].bind(receiver);
@@ -203,7 +210,6 @@ export default abstract class Model {
 
     public getDirtyProps() {
         // TODO: Implement!
-
     }
 
     public getProps() {

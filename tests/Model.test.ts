@@ -456,4 +456,5 @@ describe('Model', () => {
     describe('getClassName()', () => {});
     describe('getDirtyProps()', () => {});
     describe('getProps()', () => {});
+    describe('computedProps()', () => {});
 });

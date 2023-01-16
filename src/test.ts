@@ -1,15 +1,10 @@
 export {};
-// import Model from "./Model";
+// import Model, { computed } from './Model';
 
 // export class MyModel extends Model {
 //     public id: number | null = 0;
-// 	public name: string | null = '';
+//     public name: string | null = '';
 
+// 	@computed(['name'])
+// 	public calc = '';
 // }
-
-// const m = new MyModel().set({
-// 	name: 'foo',
-// 	surname: 'bar'
-// });
-
-// m.name = 'bar';
