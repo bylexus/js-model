@@ -95,4 +95,26 @@ export default abstract class Collection<T extends Model> {
         res.forEach((item) => this.push(item));
         return this;
     }
+
+    public find(): T | null {
+        // TODO: Implement!
+        return null;
+    }
+    public each() {
+        // TODO: Implement!
+    }
+    public arrayCopy() {
+        // TODO: Implement!
+    }
+    public map() {
+        // TODO: Implement!
+    }
+    public filter(): T[] {
+        // TODO: Implement!
+        return [] as T[];
+    }
+    public contains(): boolean {
+        // TODO: Implement!
+        return false;
+    }
 }

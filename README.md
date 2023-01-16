@@ -3,6 +3,18 @@
 An approach to create a dependency-free, slim, backend-agnostic, type-safe and simple-to-use JS Model/Collection library to be used
 with (but not only) reactive frameworks.
 
+- [What is js-model?](#what-is-js-model)
+- [Main goals of the library](#main-goals-of-the-library)
+- [Features](#features)
+	- [Whishes](#whishes)
+- [Prerequisites](#prerequisites)
+- [Documentation](#documentation)
+	- [Installation](#installation)
+	- [A first model](#a-first-model)
+	- [A first collection](#a-first-collection)
+	- [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
+
+
 ## What is js-model?
 
 js-model allows the definition of "Models" and collction of Models: A Model is a "blueprint" defining the shape of your business objects,
@@ -41,10 +53,9 @@ TBD
 
 * getter functions: `get foo()`, to support calculated values
 
+## Prerequisites
 
-## First Steps
-
-### Prerequisites
+## Documentation
 
 TBD. You will need to use a modern JS environment, suporting ES Modules, or a packager like webpack, rollup etc.
 
@@ -62,6 +73,10 @@ $ npm install git+https://github.com/bylexus/js-model.git
 Defining a model is very simple:
 
 ```ts
+// MyModel.ts:
+
+import {Model} from 'js-model';
+
 class TestModel extends Model {
     id: number | null = null;
     name: string | null = '';
@@ -109,6 +124,35 @@ This represents an instance of your model with the following values:
 ```
 
 ### A first collection
+
+Most of the time you want to operate not only with single models, but with a list / collection of models. This is what the `Collection` class
+is for: It organizes models of the same type in one collection.
+
+```ts
+// MyCollection.ts
+
+import {Collection} from 'js-model';
+import MyModel from './MyModel';
+
+class MyCollection extends Collection<MyModel> {
+	// Defines the constructor function / Class of the used Model class:
+    public modelCls = MyModel;
+}
+
+const myCol = new MyCollection();
+myCol.push(new MyModel().set({name: 'Alex'}));
+myCol.push(new MyModel().set({name: 'Blex'}));
+myCol.push(new MyModel().set({name: 'Clex'}));
+
+myCol.getModels().forEach(m => console.log(m.name));
+
+console.log(myCol.length()); // 3
+let first = myCol.first(); // Alex
+let one = myCol.at(1); // BLex
+let rm = myCol.remove(one); // or: .remove(1)
+
+// ... and more to come!
+```
 
 ### Implement a storage mechanism using DataProxy
 
