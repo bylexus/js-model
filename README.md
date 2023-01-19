@@ -81,17 +81,17 @@ import {Model} from 'js-model';
 
 class TestModel extends Model {
 	// define your properties:
-    id: number | null = null;
-    name: string | null = '';
+	id: number | null = null;
+	name: string | null = '';
 	phone: string | null = '';
-    alwaysPlusOne = 0;
+	alwaysPlusOne = 0;
 
 	// define calculated values as standard JS getters:
 	public get upperCaseName() {
 		return (this.name || '').toUpperCase();
 	}
 
-    public mutations() {
+	public mutations() {
         return {
             phone: (val: string | null) => (typeof val === 'string' ? val.replace(/\s+/g, '') : null),
             alwaysPlusOne: (val: number) => val + 1,

@@ -210,7 +210,7 @@ describe('Collection', () => {
             });
         });
     });
-    
+
     describe('find()', () => {});
     describe('each()', () => {});
     describe('arrayCopy()', () => {});

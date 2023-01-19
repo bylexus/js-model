@@ -467,7 +467,7 @@ describe('Model', () => {
                 upName: 'BAR',
                 alwaysPlusOne: 2,
                 boolVal: false,
-                nameLen: 3
+                nameLen: 3,
             });
         });
     });
@@ -498,9 +498,31 @@ describe('Model', () => {
     });
 
     describe('getProps()', () => {
-        test('...', () =>{
+        test('returns defined props, getters and dynamically defined values', () => {
+            const m = new TestModel().set({
+                name: 'Alex',
+                x: 'y',
+            });
+            expect(m.getProps()).toEqual({
+                name: 'Alex',
+                x: 'y',
+                nameLen: 4,
+                alwaysPlusOne: 1,
+                boolVal: false,
+                id: null,
+                upName: 'LEER',
+            });
+        });
+    });
+
+    describe('prop getters', () => {
+        test('prop get', () => {
             const m = new TestModel();
+            expect(m.nameLen).toStrictEqual(4);
+            m.name = 'foobar';
+            expect(m.nameLen).toStrictEqual(6);
+            m.name = null;
+            expect(m.nameLen).toStrictEqual(0);
         })
     });
-    describe('computedProps()', () => {});
 });
