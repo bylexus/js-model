@@ -60,16 +60,54 @@ describe('Collection', () => {
         expect(c.modelCls).toEqual(TestModel);
     });
 
-    test('pushing models', () => {
-        const c = new TestCollection();
-        const m1 = new TestModel();
-        const m2 = new TestModel();
-        c.push(m1);
-        expect(c.length()).toEqual(1);
-        c.push(m2);
-        expect(c.length()).toEqual(2);
-        expect(c.getModels()[0] === m1).toBeTruthy();
-        expect(c.getModels()[1] === m2).toBeTruthy();
+    describe('push()', () => {
+        test('pushing single models', () => {
+            const c = new TestCollection();
+            const m1 = new TestModel();
+            const m2 = new TestModel();
+            c.push(m1);
+            expect(c.length()).toEqual(1);
+            c.push(m2);
+            expect(c.length()).toEqual(2);
+            expect(c.getModels()[0] === m1).toBeTruthy();
+            expect(c.getModels()[1] === m2).toBeTruthy();
+        });
+
+        test('pushing single data objects', () => {
+            const c = new TestCollection();
+            const m1 = { name: 'Alex', upName: 'blex' };
+            const m2 = { name: 'Clex', upName: 'dlex' };
+            c.push(m1);
+            expect(c.length()).toEqual(1);
+            c.push(m2);
+            expect(c.length()).toEqual(2);
+            expect(c.getModels()[0].name).toEqual('Alex');
+            expect(c.getModels()[0].upName).toEqual('BLEX');
+            expect(c.getModels()[1].name).toEqual('Clex');
+            expect(c.getModels()[1].upName).toEqual('DLEX');
+        });
+
+        test('pushing multiple models as array', () => {
+            const c = new TestCollection();
+            const m1 = new TestModel();
+            const m2 = new TestModel();
+            c.push([m1, m2]);
+            expect(c.length()).toEqual(2);
+            expect(c.getModels()[0] === m1).toBeTruthy();
+            expect(c.getModels()[1] === m2).toBeTruthy();
+        });
+
+        test('pushing multiple data objects as array', () => {
+            const c = new TestCollection();
+            const m1 = { name: 'Alex', upName: 'blex' };
+            const m2 = { name: 'Clex', upName: 'dlex' };
+            c.push([m1, m2]);
+            expect(c.length()).toEqual(2);
+            expect(c.getModels()[0].name).toEqual('Alex');
+            expect(c.getModels()[0].upName).toEqual('BLEX');
+            expect(c.getModels()[1].name).toEqual('Clex');
+            expect(c.getModels()[1].upName).toEqual('DLEX');
+        });
     });
 
     test('first()', () => {
@@ -211,12 +249,159 @@ describe('Collection', () => {
         });
     });
 
-    describe('find()', () => {});
-    describe('each()', () => {});
-    describe('arrayCopy()', () => {});
-    describe('map()', () => {});
-    describe('filter()', () => {});
-    describe('contains()', () => {});
-    describe('getDirtyProps()', () => {});
-    describe('getModelClassName()', () => {});
+    describe('find()', () => {
+        test('finds the FIRST entry by the specified predicte function', () => {
+            const c = new TestCollection();
+            const m1 = new TestModel().set('name', 'Alex');
+            c.push(m1);
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            c.push(m1);
+            expect(m1 === c.find((m) => m.name === 'Alex'));
+        });
+
+        test('returns null if no model could be found', () => {
+            const c = new TestCollection();
+            const m1 = new TestModel().set('name', 'Alex');
+            c.push(m1);
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            c.push(m1);
+            expect(c.find((m) => m.name === 'Dlex')).toBeNull();
+        });
+    });
+
+    describe('each()', () => {
+        test('loops through every model in the collection', () => {
+            const c = new TestCollection();
+            const seen: (string | null)[] = [];
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            c.each((item) => seen.push(item.name));
+            expect(seen).toEqual(['Alex', 'Blex', 'Clex']);
+        });
+    });
+
+    describe('map()', () => {
+        test('converts each item to a new type, and returns an array of that type', () => {
+            const c = new TestCollection();
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            const res = c.map((m, i) => ({ name: m.name, i: i }));
+            expect(res).toEqual([
+                { name: 'Alex', i: 0 },
+                { name: 'Blex', i: 1 },
+                { name: 'Clex', i: 2 },
+            ]);
+        });
+    });
+
+    describe('filter()', () => {
+        test('returns only the elements matching the predicate function. Returns a new array.', () => {
+            const col = new TestCollection();
+            const a = new TestModel().set('name', 'Alex');
+            const b = new TestModel().set('name', 'Blexx');
+            const c = new TestModel().set('name', 'Clex');
+            const d = new TestModel().set('name', 'Dlexx');
+            col.push([a, b, c, d]);
+            const res = col.filter((m) => !!m.name?.match(/xx/));
+            expect(res).toBeInstanceOf(Array);
+            expect(res !== col.getModels()).toBeTruthy();
+            expect(res[0].name).toEqual('Blexx');
+            expect(res[1].name).toEqual('Dlexx');
+        });
+    });
+
+    describe('arrayCopy()', () => {
+        test('will return all models in a new array', () => {
+            const col = new TestCollection();
+            const a = new TestModel().set('name', 'Alex');
+            const b = new TestModel().set('name', 'Blexx');
+            const c = new TestModel().set('name', 'Clex');
+            const d = new TestModel().set('name', 'Dlexx');
+            col.push([a, b, c, d]);
+            const res = col.arrayCopy();
+
+            expect(res).toBeInstanceOf(Array);
+            expect(res).toHaveLength(4);
+            expect(res !== col.getModels()).toBeTruthy();
+            expect(res[0] === a).toBeTruthy();
+            expect(res[1] === b).toBeTruthy();
+            expect(res[2] === c).toBeTruthy();
+            expect(res[3] === d).toBeTruthy();
+        });
+    });
+
+    describe('contains(), containsBy()', () => {
+        test('containsBy() returns true if the predicate function returns true', () => {
+            const c = new TestCollection();
+
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            c.push(new TestModel().set('name', 'Alex'));
+
+            expect(c.containsBy((m) => m.name === 'Alex')).toBeTruthy();
+        });
+
+        test('containsBy() returns false if no model could be found by predicate', () => {
+            const c = new TestCollection();
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(new TestModel().set('name', 'Clex'));
+            c.push(new TestModel().set('name', 'Alex'));
+
+            expect(c.containsBy((m) => m.name === 'Dlex')).toBeFalsy();
+        });
+
+        test('contains() returns true if a model could be found by reference (model pointer)', () => {
+            const c = new TestCollection();
+            const m = new TestModel().set('name', 'Clex');
+
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(m);
+            c.push(new TestModel().set('name', 'Alex'));
+
+            expect(c.contains(m)).toBeTruthy();
+        });
+
+        test('contains() returns false if a model could not be found by reference (model pointer)', () => {
+            const c = new TestCollection();
+            const m = new TestModel().set('name', 'Clex');
+
+            c.push(new TestModel().set('name', 'Blex'));
+            c.push(new TestModel().set('name', 'Alex'));
+            c.push(new TestModel().set('name', 'Alex'));
+
+            expect(c.contains(m)).toBeFalsy();
+        });
+    });
+
+    describe('getDirtyModels()', () => {
+        test('returns models marked as dirty in this collection', () => {
+            const col = new TestCollection();
+            const a = new TestModel().set('name', 'Alex');
+            const b = new TestModel().set('name', 'Blexx').commit();
+            const c = new TestModel().set('name', 'Clex');
+            const d = new TestModel().set('name', 'Dlexx').commit();
+            col.push([a, b, c, d]);
+            const res = col.getDirtyModels();
+
+            expect(res).toBeInstanceOf(Array);
+            expect(res).toHaveLength(2);
+            expect(res !== col.getModels()).toBeTruthy();
+            expect(res[0] === a).toBeTruthy();
+            expect(res[1] === c).toBeTruthy();
+        });
+    });
+
+    describe('getModelClassName()', () => {
+        test('extract models class name from constructor name', () => {
+            const col = new TestCollection();
+            expect(col.getModelClassName()).toEqual('TestModel');
+        })
+    });
 });

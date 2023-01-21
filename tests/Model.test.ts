@@ -86,10 +86,16 @@ describe('Model', () => {
     });
 
     describe('set', () => {
-        test('returns self', () => {
+        test('returned self is really the model instance', () => {
             const i = new TestModel();
             const ret = i.set({});
             expect(ret === i).toBeTruthy();
+        });
+
+        test('returns self 2', () => {
+            const i = new TestModel();
+            i.set({ upName: 'foo' }).upName = 'alex';
+            expect(i.upName).toEqual('ALEX');
         });
 
         test('sets values on the object, including mutations', () => {
@@ -523,6 +529,6 @@ describe('Model', () => {
             expect(m.nameLen).toStrictEqual(6);
             m.name = null;
             expect(m.nameLen).toStrictEqual(0);
-        })
+        });
     });
 });

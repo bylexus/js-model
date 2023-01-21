@@ -10,6 +10,8 @@ interface ModelConstructor {
     new (initialData?: PropertiesObject | null): Model;
 }
 
+type PredicateFn<T> = (m: T, index?: number) => boolean;
+
 export default abstract class Collection<T extends Model> {
     protected _models: T[];
     protected abstract modelCls: ModelConstructor;
@@ -24,14 +26,18 @@ export default abstract class Collection<T extends Model> {
         }
     }
 
-    public push(el: T | PropertiesObject): T {
-        if (el instanceof this.modelCls) {
+    public push(el: T | PropertiesObject | T[] | PropertiesObject[]): this {
+        if (el instanceof Array) {
+            el.forEach((item) => this.push(item));
+            return this;
+        } else if (el instanceof Model) {
             this._models.push(el);
-            return el;
+            return this;
         } else {
             const m = new this.modelCls(el) as T;
+            m.set(el);
             this._models.push(m);
-            return m;
+            return this;
         }
     }
 
@@ -96,35 +102,77 @@ export default abstract class Collection<T extends Model> {
         return this;
     }
 
-    public find(): T | null {
-        // TODO: Implement!
+    public find(predicate: PredicateFn<T>): T | null {
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            if (predicate(models[index], index)) {
+                return models[index];
+            }
+        }
         return null;
     }
-    public each() {
-        // TODO: Implement!
+
+    public each(fn: (model: T, index?: number) => void): void {
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            fn(models[index], index);
+        }
     }
-    public arrayCopy() {
-        // TODO: Implement!
+    public arrayCopy(): T[] {
+        return [...this.getModels()];
     }
-    public map() {
-        // TODO: Implement!
+
+    public map<R>(mapFn: (model: T, index?: number) => R): R[] {
+        const res: R[] = [];
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            res.push(mapFn(models[index], index));
+        }
+        return res;
     }
-    public filter(): T[] {
-        // TODO: Implement!
-        return [] as T[];
+
+    public filter(filterFn: PredicateFn<T>): T[] {
+        const res: T[] = [];
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            if (filterFn(models[index], index)) {
+                res.push(models[index]);
+            }
+        }
+        return res;
     }
-    public contains(): boolean {
-        // TODO: Implement!
+
+    public contains(predicate: T): boolean {
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            if (predicate === models[index]) {
+                return true;
+            }
+        }
         return false;
     }
 
-    public getDirtyProps(): PropertiesObject {
-        // TODO: Implement!
-        return {};
+    public containsBy(predicateFn: PredicateFn<T>): boolean {
+        const models = this.getModels();
+        for (let index = 0; index < models.length; index++) {
+            if (predicateFn(models[index], index)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public getDirtyModels(): T[] {
+        const ret: T[] = [];
+        this.each((item) => {
+            if (item.isDirty()) {
+                ret.push(item);
+            }
+        });
+        return ret;
     }
 
     public getModelClassName(): string {
-        
-        return '<none>';
+        return this.modelCls.name;
     }
 }
