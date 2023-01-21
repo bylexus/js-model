@@ -172,7 +172,20 @@ export default abstract class Collection<T extends Model> {
         return ret;
     }
 
+    /**
+     * Returns the class name of the Collection's model class
+     * 
+     * Note that you *SHOULD* override this method in child classes if you need
+     * it for e.g. backend entity naming.
+     * 
+     * *WARNING*: The default class name function is NOT reliable: it depends on
+     * the constructor function's name, which can change if the code is minified!
+     * So you should ALWAYS override this method!
+     *
+     * @returns
+     */
     public getModelClassName(): string {
+        console.warn('default getModelClassName() method used: This is unreliable. Override it with your own implementation.')
         return this.modelCls.name;
     }
 }
