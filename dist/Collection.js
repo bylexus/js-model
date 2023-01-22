@@ -83,7 +83,11 @@ export default class Collection {
             if ((opts === null || opts === void 0 ? void 0 : opts.append) !== true) {
                 this.clear();
             }
-            res.forEach((item) => this.push(item));
+            res.forEach((item) => {
+                var _a;
+                this.push(item);
+                (_a = this.last()) === null || _a === void 0 ? void 0 : _a.setPhantom(false);
+            });
             return this;
         });
     }

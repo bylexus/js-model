@@ -136,6 +136,16 @@ export default abstract class Model {
         return this._isPhantom;
     }
 
+    /**
+     * Seths the phantom state of this model. Use with caution:
+     * normally this is handled by the framework, so only use if you know what you are doing!
+     * 
+     * @param isPhantom The phantom state (true for new (= phantom))
+     */
+    public setPhantom(isPhantom: boolean) {
+        this._isPhantom = isPhantom;
+    }
+
     public isDestroyed(): boolean {
         return this._isDestroyed;
     }

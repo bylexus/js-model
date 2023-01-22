@@ -37,6 +37,13 @@ export default abstract class Model {
      * @returns true if this is a new, unsaved record, false if it was loaded or saved to/from a backend
      */
     isPhantom(): boolean;
+    /**
+     * Seths the phantom state of this model. Use with caution:
+     * normally this is handled by the framework, so only use if you know what you are doing!
+     *
+     * @param isPhantom The phantom state (true for new (= phantom))
+     */
+    setPhantom(isPhantom: boolean): void;
     isDestroyed(): boolean;
     /**
      * Loads the record from a backend.

@@ -219,6 +219,25 @@ describe('Collection', () => {
             expect(c.at(0) === m3).toBeTruthy();
             expect(c.at(1) === m4).toBeTruthy();
         });
+
+        test('models loaded with query() are non-phantom', async () => {
+            const c = new TestCollection();
+            const m1 = new TestModel();
+            const m2 = new TestModel();
+            const queryMock = jest.fn(async (c: TestCollection, q?: QueryParams) => {
+                return [m1, m2];
+            });
+            c.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    query: queryMock,
+                } as DataProxy;
+            };
+
+            await c.query();
+            expect(c.getModels()[0].isPhantom()).toBeFalsy();
+            expect(c.getModels()[1].isPhantom()).toBeFalsy();
+        });
         describe('QueryOptions', () => {
             test('query() will add the result if append option is given', async () => {
                 const c = new TestCollection();

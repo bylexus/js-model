@@ -123,6 +123,15 @@ export default class Model {
     isPhantom() {
         return this._isPhantom;
     }
+    /**
+     * Seths the phantom state of this model. Use with caution:
+     * normally this is handled by the framework, so only use if you know what you are doing!
+     *
+     * @param isPhantom The phantom state (true for new (= phantom))
+     */
+    setPhantom(isPhantom) {
+        this._isPhantom = isPhantom;
+    }
     isDestroyed() {
         return this._isDestroyed;
     }

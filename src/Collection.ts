@@ -98,7 +98,10 @@ export default abstract class Collection<T extends Model> {
             this.clear();
         }
 
-        res.forEach((item) => this.push(item));
+        res.forEach((item) => {
+            this.push(item);
+            this.last()?.setPhantom(false);
+        });
         return this;
     }
 
@@ -174,10 +177,10 @@ export default abstract class Collection<T extends Model> {
 
     /**
      * Returns the class name of the Collection's model class
-     * 
+     *
      * Note that you *SHOULD* override this method in child classes if you need
      * it for e.g. backend entity naming.
-     * 
+     *
      * *WARNING*: The default class name function is NOT reliable: it depends on
      * the constructor function's name, which can change if the code is minified!
      * So you should ALWAYS override this method!
@@ -185,7 +188,13 @@ export default abstract class Collection<T extends Model> {
      * @returns
      */
     public getModelClassName(): string {
-        console.warn('default getModelClassName() method used: This is unreliable. Override it with your own implementation.')
+        console.warn(
+            'default getModelClassName() method used: This is unreliable. Override it with your own implementation.',
+        );
         return this.modelCls.name;
     }
+
+    // TODO:
+    // set permanent query params
+    // set always to be used query params
 }
