@@ -6,7 +6,6 @@ with (but not only) reactive frameworks.
 - [What is js-model?](#what-is-js-model)
 - [Main goals of the library](#main-goals-of-the-library)
 - [Features](#features)
-	- [Whishes](#whishes)
 - [Prerequisites](#prerequisites)
 - [Documentation](#documentation)
 	- [Installation](#installation)
@@ -19,7 +18,7 @@ with (but not only) reactive frameworks.
 
 ## What is js-model?
 
-js-model allows the definition of "Models" and collction of Models: A Model is a "blueprint" defining the shape of your business objects,
+js-model allows the definition of "Models" and collections of Models: A Model is a "blueprint" defining the shape of your business objects,
 for example, a Person model with name, address and other properties. js-model gives you a solid base to define and work with Model classes,
 and to organize them in collections ("fancy lists", arrays).
 
@@ -50,10 +49,6 @@ It allows you to:
 ## Features
 
 TBD
-
-### Whishes
-
-* getter functions: `get foo()`, to support calculated values
 
 ## Prerequisites
 

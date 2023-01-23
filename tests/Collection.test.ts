@@ -195,6 +195,28 @@ describe('Collection', () => {
             expect(queryMock).toBeCalledWith(c, queryParams);
         });
 
+        test('query() calls DataProxy::query with additional set queryParams', async () => {
+            const c = new TestCollection();
+            const queryMock = jest.fn(async (c: TestCollection, q?: QueryParams) => {
+                return [];
+            });
+            const queryParams = { foo: 'bar', enabled: true };
+            const addedQueryParams = { foo: 'baz', filter: { ids: [1, 2, 3] } };
+            c.setQueryParams(addedQueryParams);
+
+            c.getDataProxy = () => {
+                // @ts-ignore: we don't define a proper type here.
+                return {
+                    query: queryMock,
+                } as DataProxy;
+            };
+
+            const ret = await c.query(queryParams);
+            expect(ret === c).toBeTruthy();
+            expect(queryMock).toBeCalledTimes(1);
+            expect(queryMock).toBeCalledWith(c, { ...addedQueryParams, ...queryParams });
+        });
+
         test('query() will replace the collection content', async () => {
             const c = new TestCollection();
             const m1 = new TestModel();
@@ -238,6 +260,7 @@ describe('Collection', () => {
             expect(c.getModels()[0].isPhantom()).toBeFalsy();
             expect(c.getModels()[1].isPhantom()).toBeFalsy();
         });
+
         describe('QueryOptions', () => {
             test('query() will add the result if append option is given', async () => {
                 const c = new TestCollection();
@@ -264,6 +287,32 @@ describe('Collection', () => {
                 expect(c.at(1) === m2).toBeTruthy();
                 expect(c.at(2) === m3).toBeTruthy();
                 expect(c.at(3) === m4).toBeTruthy();
+            });
+
+            test('setQueryParam() will add/replace to the set of permanent query params', () => {
+                const col = new TestCollection();
+
+                col.setQueryParam('filter', 'id=5');
+                col.setQueryParam('filter2', true);
+                col.setQueryParam('filter', 'id=1');
+                expect(col.queryParams).toEqual({ filter: 'id=1', filter2: true });
+            });
+            test('setQueryParams() will add/replace to the set of permanent query params', () => {
+                const col = new TestCollection();
+
+                col.setQueryParam('filter', 'id=5');
+                col.setQueryParam('filter2', true);
+
+                col.setQueryParams({ filter: 'id=1', filter3: 'test3' });
+                expect(col.queryParams).toEqual({ filter: 'id=1', filter2: true, filter3: 'test3' });
+            });
+
+            test('removeQueryParam() will remove the given query param', () => {
+                const col = new TestCollection();
+
+                col.setQueryParams({ filter: 'id=1', filter2: 'foo', filter3: 'test3' });
+                col.removeQueryParam('filter2');
+                expect(col.queryParams).toEqual({ filter: 'id=1', filter3: 'test3' });
             });
         });
     });
@@ -421,6 +470,6 @@ describe('Collection', () => {
         test('extract models class name from constructor name', () => {
             const col = new TestCollection();
             expect(col.getModelClassName()).toEqual('TestModel');
-        })
+        });
     });
 });
