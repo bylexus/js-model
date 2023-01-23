@@ -2,6 +2,7 @@ import DataProxy from './DataProxy';
 import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
 export default abstract class Model {
     private _dirtyProps;
+    protected _queryParams: QueryParams;
     /** set to true during rollback: this allows the proxy to skip certain modifications */
     private _rollbackMode;
     /** if true, it is still an in-memory-only record: it was not saved yet. */
@@ -73,5 +74,31 @@ export default abstract class Model {
     getDirtyProps(): PropertiesObject;
     getProps(): PropertiesObject;
     toJSON(): PropertiesObject;
+    /**
+     * Sets a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The param name, e.g. 'filter'
+     * @param value The query param value, e.g. 'id=3'
+     * @returns this
+     */
+    setQueryParam(key: string, value: any): this;
+    /**
+     * Sets multiple permanent query params: Permanent query params are added to all query() calls.
+     *
+     * @param params Multiple query params as object, e.q. {filter: 'id=1', order: 'name'}
+     * @returns this
+     */
+    setQueryParams(params: QueryParams): this;
+    /**
+     * Removes a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The query param name to be removed from the set of permanent queries
+     * @returns this
+     */
+    removeQueryParam(key: string): this;
+    /**
+     * The set of permanent query params. Permanent query params are added to all query() calls.
+     */
+    get queryParams(): QueryParams;
 }
 //# sourceMappingURL=Model.d.ts.map

@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { DummyDataProxy } from './DataProxy';
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className', '_queryParams'];
 /**
  * The Proxy Handler intercepts behaviour of the model:
  * it sets up "trap" functions to intercept interactions:
@@ -51,6 +51,7 @@ export default class Model {
         return new DummyDataProxy();
     }
     constructor() {
+        this._queryParams = {};
         /** set to true during rollback: this allows the proxy to skip certain modifications */
         this._rollbackMode = false;
         /** if true, it is still an in-memory-only record: it was not saved yet. */
@@ -149,7 +150,7 @@ export default class Model {
      */
     load(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.getDataProxy().fetch(this, queryParams);
+            yield this.getDataProxy().fetch(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
             this._isPhantom = false;
             return this;
         });
@@ -167,10 +168,10 @@ export default class Model {
     save(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isPhantom()) {
-                yield this.getDataProxy().create(this, queryParams);
+                yield this.getDataProxy().create(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
             }
             else {
-                yield this.getDataProxy().update(this, queryParams);
+                yield this.getDataProxy().update(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
             }
             this.commit();
             this._isPhantom = false;
@@ -181,7 +182,7 @@ export default class Model {
     destroy(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.isPhantom()) {
-                yield this.getDataProxy().delete(this, queryParams);
+                yield this.getDataProxy().delete(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
                 this._isPhantom = true;
                 this._isDestroyed = true;
             }
@@ -214,6 +215,43 @@ export default class Model {
     }
     toJSON() {
         return this.getProps();
+    }
+    /**
+     * Sets a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The param name, e.g. 'filter'
+     * @param value The query param value, e.g. 'id=3'
+     * @returns this
+     */
+    setQueryParam(key, value) {
+        this._queryParams[key] = value;
+        return this;
+    }
+    /**
+     * Sets multiple permanent query params: Permanent query params are added to all query() calls.
+     *
+     * @param params Multiple query params as object, e.q. {filter: 'id=1', order: 'name'}
+     * @returns this
+     */
+    setQueryParams(params) {
+        this._queryParams = Object.assign(Object.assign({}, this._queryParams), params);
+        return this;
+    }
+    /**
+     * Removes a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The query param name to be removed from the set of permanent queries
+     * @returns this
+     */
+    removeQueryParam(key) {
+        delete this._queryParams[key];
+        return this;
+    }
+    /**
+     * The set of permanent query params. Permanent query params are added to all query() calls.
+     */
+    get queryParams() {
+        return Object.assign({}, this._queryParams);
     }
 }
 //# sourceMappingURL=Model.js.map

@@ -1,7 +1,7 @@
 import DataProxy, { DummyDataProxy } from './DataProxy';
 import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
 
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className'];
+const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className', '_queryParams'];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -41,6 +41,7 @@ const proxyHandler = {
 
 export default abstract class Model {
     private _dirtyProps: PropertiesObject;
+    protected _queryParams: QueryParams = {};
 
     /** set to true during rollback: this allows the proxy to skip certain modifications */
     private _rollbackMode = false;
@@ -75,13 +76,15 @@ export default abstract class Model {
      * Returns the class name of this model
      * Note that you *SHOULD* override this method in child classes if you need
      * it for e.g. backend entity naming.
-     * 
+     *
      * *WARNING*: The default class name function is NOT reliable: it depends on
      * the constructor function's name, which can change if the code is minified!
      * So you should ALWAYS override this method!
      */
     public getClassName(): string {
-        console.warn('default getClassName() method used: This is unreliable. Override it with your own implementation.')
+        console.warn(
+            'default getClassName() method used: This is unreliable. Override it with your own implementation.',
+        );
         return this._className;
     }
 
@@ -139,7 +142,7 @@ export default abstract class Model {
     /**
      * Seths the phantom state of this model. Use with caution:
      * normally this is handled by the framework, so only use if you know what you are doing!
-     * 
+     *
      * @param isPhantom The phantom state (true for new (= phantom))
      */
     public setPhantom(isPhantom: boolean) {
@@ -163,7 +166,7 @@ export default abstract class Model {
      * model.set('id', 5).load()
      */
     public async load(queryParams?: QueryParams | null): Promise<this> {
-        await this.getDataProxy().fetch(this, queryParams);
+        await this.getDataProxy().fetch(this, { ...this.queryParams, ...queryParams });
         this._isPhantom = false;
         return this;
     }
@@ -180,9 +183,9 @@ export default abstract class Model {
      */
     public async save(queryParams?: QueryParams | null): Promise<this> {
         if (this.isPhantom()) {
-            await this.getDataProxy().create(this, queryParams);
+            await this.getDataProxy().create(this, { ...this.queryParams, ...queryParams });
         } else {
-            await this.getDataProxy().update(this, queryParams);
+            await this.getDataProxy().update(this, { ...this.queryParams, ...queryParams });
         }
         this.commit();
         this._isPhantom = false;
@@ -192,7 +195,7 @@ export default abstract class Model {
 
     public async destroy(queryParams?: QueryParams | null): Promise<this> {
         if (!this.isPhantom()) {
-            await this.getDataProxy().delete(this, queryParams);
+            await this.getDataProxy().delete(this, { ...this.queryParams, ...queryParams });
             this._isPhantom = true;
             this._isDestroyed = true;
         }
@@ -228,5 +231,46 @@ export default abstract class Model {
 
     public toJSON() {
         return this.getProps();
+    }
+
+    /**
+     * Sets a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The param name, e.g. 'filter'
+     * @param value The query param value, e.g. 'id=3'
+     * @returns this
+     */
+    public setQueryParam(key: string, value: any): this {
+        this._queryParams[key] = value;
+        return this;
+    }
+
+    /**
+     * Sets multiple permanent query params: Permanent query params are added to all query() calls.
+     *
+     * @param params Multiple query params as object, e.q. {filter: 'id=1', order: 'name'}
+     * @returns this
+     */
+    public setQueryParams(params: QueryParams): this {
+        this._queryParams = { ...this._queryParams, ...params };
+        return this;
+    }
+
+    /**
+     * Removes a permanent query param: Permanent query params are added to all query() calls.
+     *
+     * @param key The query param name to be removed from the set of permanent queries
+     * @returns this
+     */
+    public removeQueryParam(key: string): this {
+        delete this._queryParams[key];
+        return this;
+    }
+
+    /**
+     * The set of permanent query params. Permanent query params are added to all query() calls.
+     */
+    public get queryParams(): QueryParams {
+        return { ...this._queryParams };
     }
 }

@@ -240,7 +240,7 @@ describe('Model', () => {
             expect(i.upName).toStrictEqual('FETCH-TEST');
         });
 
-        test('load sends queryParams to DataProxy::fetch', async () => {
+        test('load sends queryParams to DataProxy::fetch, including permanent queryParams', async () => {
             const i = new TestModel();
             const fetchMock = jest.fn(async (m: TestModel, p?: QueryParams) => {
                 return m;
@@ -251,6 +251,7 @@ describe('Model', () => {
                     fetch: fetchMock,
                 } as DataProxy;
             };
+            i.setQueryParams({ p1: 'perm', p3: 'perm2' });
             await i
                 .set({
                     id: 5,
@@ -265,6 +266,7 @@ describe('Model', () => {
             expect(fetchMock).toBeCalledWith(i, {
                 p1: 'foo',
                 p2: true,
+                p3: 'perm2',
             });
         });
 
@@ -336,7 +338,7 @@ describe('Model', () => {
             expect(i.isPhantom()).toBeFalsy();
         });
 
-        test('save will send queryParams to DataProxy::create, update', async () => {
+        test('save will send queryParams to DataProxy::create, update, including permanent params', async () => {
             const i = new TestModel();
             const createMock = jest.fn(async (m: TestModel) => {
                 return m;
@@ -344,7 +346,11 @@ describe('Model', () => {
             const updateMock = jest.fn(async (m: TestModel) => {
                 return m;
             });
+
             const queryParams = { foo: 'bar', enable: true };
+            const permanentQueryParams = { foo: 'perm', p3: 'perm2' };
+            i.setQueryParams(permanentQueryParams);
+
             i.getDataProxy = () => {
                 // @ts-ignore: we don't define a proper type here.
                 return {
@@ -356,12 +362,12 @@ describe('Model', () => {
             await i.save(queryParams);
             expect(updateMock).toBeCalledTimes(0);
             expect(createMock).toBeCalledTimes(1);
-            expect(createMock).toBeCalledWith(i, queryParams);
+            expect(createMock).toBeCalledWith(i, { ...permanentQueryParams, ...queryParams });
             i.set({ name: 'moo' });
             await i.save(queryParams);
             expect(updateMock).toBeCalledTimes(1);
             expect(createMock).toBeCalledTimes(1);
-            expect(updateMock).toBeCalledWith(i, queryParams);
+            expect(updateMock).toBeCalledWith(i, { ...permanentQueryParams, ...queryParams });
         });
     });
 
@@ -414,6 +420,7 @@ describe('Model', () => {
             expect(i.isPhantom()).toBeTruthy();
             expect(i.isDestroyed()).toBeFalsy();
         });
+
         test('save after destroy will re-save it', async () => {
             const i = new TestModel();
             const createMock = jest.fn(async (m: TestModel) => {
@@ -439,7 +446,8 @@ describe('Model', () => {
             expect(i.isPhantom()).toBeFalsy();
             expect(i.isDestroyed()).toBeFalsy();
         });
-        test('destroy will send queryParams to DataProxy::delete', async () => {
+
+        test('destroy will send queryParams to DataProxy::delete, including permanent params', async () => {
             const i = new TestModel();
             const createMock = jest.fn(async (m: TestModel) => {
                 return m;
@@ -447,7 +455,11 @@ describe('Model', () => {
             const deleteMock = jest.fn(async (m: TestModel) => {
                 return m;
             });
+
             const queryParams = { foo: 'bar', enabled: true };
+            const permanentQueryParams = { foo: 'perm', p3: 'perm2' };
+            i.setQueryParams(permanentQueryParams);
+
             i.getDataProxy = () => {
                 // @ts-ignore: we don't define a proper type here.
                 return {
@@ -459,7 +471,35 @@ describe('Model', () => {
             await i.destroy(queryParams);
 
             expect(deleteMock).toBeCalledTimes(1);
-            expect(deleteMock).toBeCalledWith(i, queryParams);
+            expect(deleteMock).toBeCalledWith(i, { ...permanentQueryParams, ...queryParams });
+        });
+    });
+
+    describe('permanent queryParams', () => {
+        test('setQueryParam() will add/replace to the set of permanent query params', () => {
+            const mod = new TestModel();
+
+            mod.setQueryParam('filter', 'id=5');
+            mod.setQueryParam('filter2', true);
+            mod.setQueryParam('filter', 'id=1');
+            expect(mod.queryParams).toEqual({ filter: 'id=1', filter2: true });
+        });
+        test('setQueryParams() will add/replace to the set of permanent query params', () => {
+            const mod = new TestModel();
+
+            mod.setQueryParam('filter', 'id=5');
+            mod.setQueryParam('filter2', true);
+
+            mod.setQueryParams({ filter: 'id=1', filter3: 'test3' });
+            expect(mod.queryParams).toEqual({ filter: 'id=1', filter2: true, filter3: 'test3' });
+        });
+
+        test('removeQueryParam() will remove the given query param', () => {
+            const mod = new TestModel();
+
+            mod.setQueryParams({ filter: 'id=1', filter2: 'foo', filter3: 'test3' });
+            mod.removeQueryParam('filter2');
+            expect(mod.queryParams).toEqual({ filter: 'id=1', filter3: 'test3' });
         });
     });
 
