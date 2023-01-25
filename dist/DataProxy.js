@@ -10,22 +10,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 export class DummyDataProxy {
     fetch(m, queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            return m;
+            return null;
         });
     }
     create(m, queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            return m;
+            return null;
         });
     }
     update(m, queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            return m;
+            return null;
         });
     }
     delete(m, queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            return m;
+            return null;
         });
     }
     query(collection, queryParams) {

@@ -150,8 +150,13 @@ export default class Model {
      */
     load(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.getDataProxy().fetch(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+            const res = yield this.getDataProxy().fetch(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+            if (res) {
+                this.set(res);
+            }
+            this.commit();
             this._isPhantom = false;
+            this._isDestroyed = false;
             return this;
         });
     }
@@ -167,11 +172,15 @@ export default class Model {
      */
     save(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
+            let res;
             if (this.isPhantom()) {
-                yield this.getDataProxy().create(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+                res = yield this.getDataProxy().create(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
             }
             else {
-                yield this.getDataProxy().update(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+                res = yield this.getDataProxy().update(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+            }
+            if (res) {
+                this.set(res);
             }
             this.commit();
             this._isPhantom = false;
@@ -182,7 +191,11 @@ export default class Model {
     destroy(queryParams) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.isPhantom()) {
-                yield this.getDataProxy().delete(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+                const res = yield this.getDataProxy().delete(this, Object.assign(Object.assign({}, this.queryParams), queryParams));
+                if (res) {
+                    this.set(res);
+                    this.commit();
+                }
                 this._isPhantom = true;
                 this._isDestroyed = true;
             }

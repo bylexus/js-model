@@ -182,15 +182,19 @@ The needed interface that `getDataProxy()` needs to return is defined as follows
 ```ts
 interface DataProxy {
 	// Fetch data for a single model:
-    fetch<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+    fetch<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
 	// initial-store a new model:
-    create<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+    create<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
 	// store an exiting model:
-    update<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+    update<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
 	// delete an exiting model:
-    delete<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<T>;
+    delete<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
+
 	// query for models:
-    query<M extends Model, C extends Collection<M>>(collection: C, queryParams?: QueryParams | null): Promise<M[]>;
+    query<M extends Model, C extends Collection<M>>(
+        collection: C,
+        queryParams?: QueryParams | null,
+    ): Promise<PropertiesObject[]>;
 }
 ```
 
@@ -203,31 +207,29 @@ to save memory, but you _don't have to_: If you e.g. want to implement some kind
 
 ```ts
 import { DataProxy } from 'js-model';
+import type { PropertiesObject } from 'js-model';
 
 class FakeDataProxy implements DataProxy {
-    async fetch<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+    async fetch<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
 		const data = await api.get(`/${m.getClassName()}/${m.get('id')}`);
-		m.set(data);
-        return m;
+		return data;
     }
-    async create<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+    async create<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
 		const data = await api.post(`/${m.getClassName()}`, m.getProps());
-		m.set(data);
-        return m;
+		return data;
     }
-    async update<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+    async update<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
 		const data = await api.patch(`/${m.getClassName()}/${m.get('id')}`, m.getProps());
-		m.set(data);
-        return m;
+		return data;
     }
-    async delete<M extends Model>(m: M, queryParams?: QueryParams): Promise<M> {
+    async delete<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
 		const data = await api.destory(`/${m.getClassName()}/${m.get('id')}`);
-        return m;
+		return data;
     }
 
-    async query<M extends Model, C extends Collection<M>>(collection: C, queryParams?: QueryParams): Promise<M[]> {
+    async query<M extends Model, C extends Collection<M>>(collection: C, queryParams?: QueryParams): Promise<PropertiesObject[]> {
 		const data = await api.query(`/${collection.getModelClassName()}`, queryParams);
-        return res;
+        return data;
     }
 }
 ```

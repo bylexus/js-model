@@ -1,5 +1,5 @@
 import { Collection, Model, DataProxy } from '../src';
-import { QueryParams } from '../src/SharedTypes';
+import { PropertiesObject, QueryParams } from '../src/SharedTypes';
 
 class TestCollection extends Collection<TestModel> {
     public modelCls = TestModel;
@@ -22,32 +22,33 @@ class TestModel extends Model {
 
     public getDataProxy(): DataProxy {
         return {
-            fetch(m: TestModel): Promise<TestModel> {
-                return new Promise<TestModel>((success, err) => {
+            fetch(m: TestModel): Promise<PropertiesObject | null> {
+                return new Promise((success, err) => {
                     // fake timeout and data
                     setTimeout(() => {
                         // fail case: if id is -1
                         if (m.id === -1) {
                             return err('fail!');
                         }
-                        m.id = 42;
-                        m.name = 'fetch-test';
-                        m.upName = 'fetch-test';
-                        success(m);
+                        success({
+                            id: 42,
+                            name: 'fetch-test',
+                            upName: 'fetch-test',
+                        });
                     }, 2);
                 });
             },
-            async create(m: TestModel): Promise<TestModel> {
-                return m;
+            async create(m: TestModel): Promise<PropertiesObject | null> {
+                return null;
             },
-            async update(m: TestModel): Promise<TestModel> {
-                return m;
+            async update(m: TestModel): Promise<PropertiesObject | null> {
+                return null;
             },
-            async delete(m: TestModel): Promise<TestModel> {
-                return m;
+            async delete(m: TestModel): Promise<PropertiesObject | null> {
+                return null;
             },
-            async query(collection: TestCollection): Promise<TestModel[]> {
-                return [] as TestModel[];
+            async query(collection: TestCollection): Promise<PropertiesObject[]> {
+                return [];
             },
         } as DataProxy;
     }

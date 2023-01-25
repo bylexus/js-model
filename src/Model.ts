@@ -166,8 +166,14 @@ export default abstract class Model {
      * model.set('id', 5).load()
      */
     public async load(queryParams?: QueryParams | null): Promise<this> {
-        await this.getDataProxy().fetch(this, { ...this.queryParams, ...queryParams });
+        const res = await this.getDataProxy().fetch(this, { ...this.queryParams, ...queryParams });
+        if (res) {
+            this.set(res);
+        }
+        this.commit();
+
         this._isPhantom = false;
+        this._isDestroyed = false;
         return this;
     }
 
@@ -182,10 +188,14 @@ export default abstract class Model {
      * the store returns some new data.
      */
     public async save(queryParams?: QueryParams | null): Promise<this> {
+        let res: PropertiesObject | null;
         if (this.isPhantom()) {
-            await this.getDataProxy().create(this, { ...this.queryParams, ...queryParams });
+            res = await this.getDataProxy().create(this, { ...this.queryParams, ...queryParams });
         } else {
-            await this.getDataProxy().update(this, { ...this.queryParams, ...queryParams });
+            res = await this.getDataProxy().update(this, { ...this.queryParams, ...queryParams });
+        }
+        if (res) {
+            this.set(res);
         }
         this.commit();
         this._isPhantom = false;
@@ -195,7 +205,11 @@ export default abstract class Model {
 
     public async destroy(queryParams?: QueryParams | null): Promise<this> {
         if (!this.isPhantom()) {
-            await this.getDataProxy().delete(this, { ...this.queryParams, ...queryParams });
+            const res = await this.getDataProxy().delete(this, { ...this.queryParams, ...queryParams });
+            if (res) {
+                this.set(res);
+                this.commit();
+            }
             this._isPhantom = true;
             this._isDestroyed = true;
         }
