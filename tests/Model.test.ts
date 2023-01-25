@@ -562,6 +562,63 @@ describe('Model', () => {
         });
     });
 
+    describe('committed', () => {
+        test('Model.$ contains all non-changed / committed values', () => {
+            const m = new TestModel().set({ name: 'Alex', alwaysPlusOne: 10, upName: 'blex' });
+            m.commit();
+            expect(m.$).toEqual({
+                alwaysPlusOne: 11,
+                boolVal: false,
+                id: null,
+                name: 'Alex',
+                nameLen: 4,
+                upName: 'BLEX',
+            });
+
+            m.set({ name: 'Blex', upName: 'clex' });
+            expect(m.$).toEqual({
+                alwaysPlusOne: 11,
+                boolVal: false,
+                id: null,
+                name: 'Alex',
+                nameLen: 4,
+                upName: 'BLEX',
+            });
+
+            m.commit();
+            expect(m.$).toEqual({
+                alwaysPlusOne: 11,
+                boolVal: false,
+                id: null,
+                name: 'Blex',
+                nameLen: 4,
+                upName: 'CLEX',
+            });
+
+            m.set({ x: 1, y: 'zwei' });
+            expect(m.$).toEqual({
+                alwaysPlusOne: 11,
+                boolVal: false,
+                id: null,
+                name: 'Blex',
+                nameLen: 4,
+                upName: 'CLEX',
+            });
+
+            m.commit();
+            expect(m.$).toEqual({
+                alwaysPlusOne: 11,
+                boolVal: false,
+                id: null,
+                name: 'Blex',
+                nameLen: 4,
+                upName: 'CLEX',
+                x: 1,
+                y: 'zwei',
+            });
+        });
+    });
+
     describe('prop getters', () => {
         test('prop get', () => {
             const m = new TestModel();

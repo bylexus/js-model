@@ -8,7 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { DummyDataProxy } from './DataProxy';
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className', '_queryParams'];
+const internalModelProps = [
+    '_dirtyProps',
+    '_rollbackMode',
+    '_isPhantom',
+    '_isDestroyed',
+    '_className',
+    '_queryParams',
+    '$',
+];
 /**
  * The Proxy Handler intercepts behaviour of the model:
  * it sets up "trap" functions to intercept interactions:
@@ -59,6 +67,11 @@ export default class Model {
         /** if true, this model instance was deleted using destroy(). */
         this._isDestroyed = false;
         this._className = '';
+        /**
+         * Contains all properties of this model that are
+         * commited (after calling commit()).
+         */
+        this.$ = {};
         this._className = this.constructor.name;
         this._dirtyProps = {};
         // set up and return the proxy object:
@@ -107,6 +120,7 @@ export default class Model {
             this.set(data);
         }
         this._dirtyProps = {};
+        this.updateCommitedProps();
         return this;
     }
     rollback() {
@@ -265,6 +279,11 @@ export default class Model {
      */
     get queryParams() {
         return Object.assign({}, this._queryParams);
+    }
+    updateCommitedProps() {
+        const props = this.getProps() || {};
+        // override props with already committed props:
+        this.$ = Object.assign(Object.assign({}, props), this._dirtyProps);
     }
 }
 //# sourceMappingURL=Model.js.map

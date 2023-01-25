@@ -1,7 +1,15 @@
 import DataProxy, { DummyDataProxy } from './DataProxy';
 import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
 
-const internalModelProps = ['_dirtyProps', '_rollbackMode', '_isPhantom', '_isDestroyed', '_className', '_queryParams'];
+const internalModelProps = [
+    '_dirtyProps',
+    '_rollbackMode',
+    '_isPhantom',
+    '_isDestroyed',
+    '_className',
+    '_queryParams',
+    '$',
+];
 
 /**
  * The Proxy Handler intercepts behaviour of the model:
@@ -53,6 +61,12 @@ export default abstract class Model {
     private _isDestroyed = false;
 
     private _className = '';
+
+    /**
+     * Contains all properties of this model that are
+     * commited (after calling commit()).
+     */
+    public $: PropertiesObject = {};
 
     /**
      * Implement in child classes: Must return a DataProxy instance.
@@ -119,6 +133,7 @@ export default abstract class Model {
             this.set(data);
         }
         this._dirtyProps = {};
+        this.updateCommitedProps();
         return this;
     }
 
@@ -286,5 +301,12 @@ export default abstract class Model {
      */
     public get queryParams(): QueryParams {
         return { ...this._queryParams };
+    }
+
+    protected updateCommitedProps() {
+        const props = this.getProps() || {};
+
+        // override props with already committed props:
+        this.$ = { ...props, ...this._dirtyProps };
     }
 }

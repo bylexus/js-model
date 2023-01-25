@@ -1,9 +1,9 @@
-export {};
-// import Model, { computed } from './Model';
-// export class MyModel extends Model {
-//     public id: number | null = 0;
-//     public name: string | null = '';
-// 	@computed(['name'])
-// 	public calc = '';
-// }
+import Model from './Model';
+export class MyModel extends Model {
+    constructor(props) {
+        super();
+        this.id = 0;
+        this.name = '';
+    }
+}
 //# sourceMappingURL=test.js.map

@@ -11,6 +11,11 @@ export default abstract class Model {
     private _isDestroyed;
     private _className;
     /**
+     * Contains all properties of this model that are
+     * commited (after calling commit()).
+     */
+    $: PropertiesObject;
+    /**
      * Implement in child classes: Must return a DataProxy instance.
      * The default implementation just reurns a dummy data proxy that does nothing.
      */
@@ -100,5 +105,6 @@ export default abstract class Model {
      * The set of permanent query params. Permanent query params are added to all query() calls.
      */
     get queryParams(): QueryParams;
+    protected updateCommitedProps(): void;
 }
 //# sourceMappingURL=Model.d.ts.map

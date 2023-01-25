@@ -1,10 +1,10 @@
-export {};
-// import Model, { computed } from './Model';
+import Model from './Model';
 
-// export class MyModel extends Model {
-//     public id: number | null = 0;
-//     public name: string | null = '';
+export class MyModel extends Model {
+    public id: number | null = 0;
+    public name: string | null = '';
 
-// 	@computed(['name'])
-// 	public calc = '';
-// }
+    constructor(props: object) {
+        super();
+    }
+}
