@@ -62,11 +62,22 @@ TBD. You will need to use a modern JS/TS environment, suporting ES Modules, or a
 
 ### Installation
 
-TBD: as soon as this library is available as npm package, this section shows you how to install.
-In the meantime, you can use it from the git repository directly:
+This library is available as npm package, but not from the official npmjs.com registry: I use github.com as package registry,
+as this package should not become part of the global npmjs ecosystem (for now).
+
+So in order to install this library, you need to define github as the registry for my namespace:
+
+In your `.npmrc` file (either in your user home or in your project directory), configure the npm registry:
+
+```plain
+# .npmrc:
+@bylexus:registry=https://npm.pkg.github.com
+```
+
+Now you can install it as any other npm package using `npm`:
 
 ```sh
-$ npm install git+https://github.com/bylexus/js-model.git
+$ npm install @bylexus/js-model.git
 ```
 
 ### A first model
