@@ -1,5 +1,7 @@
 import DataProxy, { DummyDataProxy } from './DataProxy';
-import { PropertiesObject, MutationsObject, QueryParams } from './SharedTypes';
+import { MutationsObject, PropertiesObject, QueryParams } from './SharedTypes';
+
+export type ModelConstructor<T extends Model> = new (...args: any[]) => T;
 
 const internalModelProps = [
     '_dirtyProps',
@@ -309,4 +311,20 @@ export default abstract class Model {
         // override props with already committed props:
         this.$ = { ...props, ...this._dirtyProps };
     }
+}
+
+/**
+ * Creates a new instance of a specific Model, optionally 
+ * defining properties of the new model instance.
+ * 
+ * @param constr The Model instance class (constructor) function
+ * @param props (optional) An object with instance properties
+ * @returns The created and filled Model instance
+ */
+export function createModel<M extends Model>(constr: ModelConstructor<M>, props?: PropertiesObject): M {
+    const inst = new constr();
+    if (props) {
+        inst.set(props);
+    }
+    return inst;
 }

@@ -1,11 +1,9 @@
 import DataProxy from './DataProxy';
 import Model from './Model';
+import type { ModelConstructor } from './Model';
 import { PropertiesObject, QueryParams } from './SharedTypes';
 interface QueryOptions {
     append?: boolean;
-}
-interface ModelConstructor {
-    new (initialData?: PropertiesObject | null): Model;
 }
 type PredicateFn<T> = (m: T, index?: number) => boolean;
 /**
@@ -42,7 +40,7 @@ type PredicateFn<T> = (m: T, index?: number) => boolean;
 export default abstract class Collection<T extends Model> {
     protected _models: T[];
     protected _queryParams: QueryParams;
-    protected abstract modelCls: ModelConstructor;
+    protected abstract modelCls: ModelConstructor<T>;
     constructor();
     clear(): void;
     /**
@@ -55,7 +53,7 @@ export default abstract class Collection<T extends Model> {
      *
      * Example:
      * <code>
-     * const p = new Person();
+     * const p = createModel(Person);
      * const o = {name: 'Alex', surname: 'Schenkel'};
      * const col = new PersonCollection();
      *
@@ -63,7 +61,7 @@ export default abstract class Collection<T extends Model> {
      * col.push(p).push(o);
      *
      * multiple models:
-     * col.push([new Person(), new Person()])
+     * col.push([createModel(Person), createModel(Person)])
      *
      * // multiple data objects:
      * col.push([{name: 'Alex', surname: 'Schenkel'}, {name: 'Blex'}])

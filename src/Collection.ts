@@ -1,13 +1,10 @@
 import DataProxy, { DummyDataProxy } from './DataProxy';
-import Model from './Model';
+import Model, { createModel } from './Model';
+import type { ModelConstructor } from './Model';
 import { PropertiesObject, QueryParams } from './SharedTypes';
 
 interface QueryOptions {
     append?: boolean;
-}
-
-interface ModelConstructor {
-    new (initialData?: PropertiesObject | null): Model;
 }
 
 type PredicateFn<T> = (m: T, index?: number) => boolean;
@@ -46,7 +43,7 @@ type PredicateFn<T> = (m: T, index?: number) => boolean;
 export default abstract class Collection<T extends Model> {
     protected _models: T[];
     protected _queryParams: QueryParams = {};
-    protected abstract modelCls: ModelConstructor;
+    protected abstract modelCls: ModelConstructor<T>;
 
     constructor() {
         this._models = [];
@@ -68,7 +65,7 @@ export default abstract class Collection<T extends Model> {
      *
      * Example:
      * <code>
-     * const p = new Person();
+     * const p = createModel(Person);
      * const o = {name: 'Alex', surname: 'Schenkel'};
      * const col = new PersonCollection();
      *
@@ -76,7 +73,7 @@ export default abstract class Collection<T extends Model> {
      * col.push(p).push(o);
      *
      * multiple models:
-     * col.push([new Person(), new Person()])
+     * col.push([createModel(Person), createModel(Person)])
      *
      * // multiple data objects:
      * col.push([{name: 'Alex', surname: 'Schenkel'}, {name: 'Blex'}])
@@ -93,8 +90,7 @@ export default abstract class Collection<T extends Model> {
             this._models.push(el);
             return this;
         } else {
-            const m = new this.modelCls(el) as T;
-            m.set(el);
+            const m = createModel(this.modelCls, el);
             this._models.push(m);
             return this;
         }
@@ -324,8 +320,8 @@ export default abstract class Collection<T extends Model> {
      */
     public contains(predicate: T): boolean {
         const models = this.getModels();
-        for (let index = 0; index < models.length; index++) {
-            if (predicate === models[index]) {
+        for (const element of models) {
+            if (predicate === element) {
                 return true;
             }
         }

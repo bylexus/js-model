@@ -8,12 +8,12 @@ with (but not only) reactive frameworks.
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Documentation](#documentation)
-	- [Installation](#installation)
-	- [A first model](#a-first-model)
-	- [A first collection](#a-first-collection)
-	- [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
-		- [The DataProxy interface](#the-dataproxy-interface)
-		- [Example DataProxy](#example-dataproxy)
+  - [Installation](#installation)
+  - [A first model](#a-first-model)
+  - [A first collection](#a-first-collection)
+  - [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
+    - [The DataProxy interface](#the-dataproxy-interface)
+    - [Example DataProxy](#example-dataproxy)
 
 
 ## What is js-model?
@@ -54,7 +54,7 @@ TBD
 
 ## Documentation
 
-TBD. You will need to use a modern JS environment, suporting ES Modules, or a packager like webpack, rollup etc.
+TBD. You will need to use a modern JS/TS environment, suporting ES Modules, or a packager like webpack, rollup etc.
 
 ### Installation
 
@@ -79,14 +79,14 @@ class TestModel extends Model {
 	id: number | null = null;
 	name: string | null = '';
 	phone: string | null = '';
-	alwaysPlusOne = 0;
+    alwaysPlusOne = 0;
 
-	// define calculated values as standard JS getters:
-	public get upperCaseName() {
-		return (this.name || '').toUpperCase();
-	}
+    // define calculated values as standard JS getters:
+    public get upperCaseName() {
+        return (this.name || '').toUpperCase();
+    }
 
-	public mutations() {
+    public mutations() {
         return {
             phone: (val: string | null) => (typeof val === 'string' ? val.replace(/\s+/g, '') : null),
             alwaysPlusOne: (val: number) => val + 1,
@@ -100,16 +100,18 @@ The `mutations()` method allows you to define special setter mutators: simple fu
 and mutate the value before storing them internally. In this example, phone gets cleaned of whitespace,
 while "alwaysPlusOne" is incremented by 1 if set.
 
-Not you're ready to use your model:
+Now you're ready to use your model:
 
 ```ts
-const myModel = new TestModel();
-// set some properties:
+import {createModel} from 'js-model';
+
+const myModel = createModel(TestModel, {name: 'Fritz'});
+// set some properties, override defined properties):
 myModel.set({
-	id: 42,
-	name: 'Alex',
-	phone: '+41 79 111 22 33',
-	alwaysPlusOne: 20
+    id: 42,
+    name: 'Alex',
+    phone: '+41 79 111 22 33',
+    alwaysPlusOne: 20
 });
 
 // or set single values:
@@ -119,11 +121,11 @@ myModel.phone = '+41 79 111 22 33';
 This represents an instance of your model with the following values:
 ```js
 {
-	id: 42,
-	name 'Alex',
-	phone: '+41791112233',
-	alwaysPlusOne: 21,
-	upperCaseName: 'ALEX'
+    id: 42,
+    name 'Alex',
+    phone: '+41791112233',
+    alwaysPlusOne: 21,
+    upperCaseName: 'ALEX'
 }
 ```
 
@@ -135,18 +137,18 @@ is for: It organizes models of the same type in one collection.
 ```ts
 // MyCollection.ts
 
-import {Collection} from 'js-model';
+import {Collection, createModel} from 'js-model';
 import MyModel from './MyModel';
 
 class MyCollection extends Collection<MyModel> {
-	// Defines the constructor function / Class of the used Model class:
+    // Defines the constructor function / Class of the used Model class:
     public modelCls = MyModel;
 }
 
 const myCol = new MyCollection();
-myCol.push(new MyModel().set({name: 'Alex'}));
-myCol.push(new MyModel().set({name: 'Blex'}));
-myCol.push(new MyModel().set({name: 'Clex'}));
+myCol.push(createModel(MyModel,{name: 'Alex'}));
+myCol.push(createModel(MyModel,{name: 'Blex'}));
+myCol.push(createModel(MyModel,{name: 'Clex'}));
 
 myCol.getModels().forEach(m => console.log(m.name));
 
@@ -181,16 +183,16 @@ The needed interface that `getDataProxy()` needs to return is defined as follows
 
 ```ts
 interface DataProxy {
-	// Fetch data for a single model:
+    // Fetch data for a single model:
     fetch<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
-	// initial-store a new model:
+    // initial-store a new model:
     create<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
-	// store an exiting model:
+    // store an exiting model:
     update<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
-	// delete an exiting model:
+    // delete an exiting model:
     delete<T extends Model>(model: T, queryParams?: QueryParams | null): Promise<PropertiesObject | null>;
 
-	// query for models:
+    // query for models:
     query<M extends Model, C extends Collection<M>>(
         collection: C,
         queryParams?: QueryParams | null,
@@ -211,7 +213,7 @@ import type { PropertiesObject } from 'js-model';
 
 class FakeDataProxy implements DataProxy {
     async fetch<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
-		const data = await api.get(`/${m.getClassName()}/${m.get('id')}`);
+    const data = await api.get(`/${m.getClassName()}/${m.get('id')}`);
 		return data;
     }
     async create<M extends Model>(m: M, queryParams?: QueryParams): Promise<PropertiesObject|null> {
@@ -261,5 +263,5 @@ where you are responsible to retrieve / send the data.
 
 
 
-(c) 2023 Alexander Schenke, alex-jsmodel@alexi.ch
+(c) 2023 Alexander Schenkel, alex-jsmodel@alexi.ch
 

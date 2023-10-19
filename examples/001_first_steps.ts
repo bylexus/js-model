@@ -1,4 +1,4 @@
-import { Model } from '../src';
+import { Model, createModel } from '../src';
 
 class TestModel extends Model {
     // define your properties:
@@ -20,7 +20,7 @@ class TestModel extends Model {
     }
 }
 
-const myModel = new TestModel();
+const myModel = createModel(TestModel, {name: 'Achmed'});
 // set some properties:
 myModel.set({
     id: 42,

@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { DummyDataProxy } from './DataProxy';
-import Model from './Model';
+import Model, { createModel } from './Model';
 /**
  * The Collection class represents a collection / list of the same
  * models. It offers methods to organize the model instances and
@@ -60,7 +60,7 @@ export default class Collection {
      *
      * Example:
      * <code>
-     * const p = new Person();
+     * const p = createModel(Person);
      * const o = {name: 'Alex', surname: 'Schenkel'};
      * const col = new PersonCollection();
      *
@@ -68,7 +68,7 @@ export default class Collection {
      * col.push(p).push(o);
      *
      * multiple models:
-     * col.push([new Person(), new Person()])
+     * col.push([createModel(Person), createModel(Person)])
      *
      * // multiple data objects:
      * col.push([{name: 'Alex', surname: 'Schenkel'}, {name: 'Blex'}])
@@ -87,8 +87,7 @@ export default class Collection {
             return this;
         }
         else {
-            const m = new this.modelCls(el);
-            m.set(el);
+            const m = createModel(this.modelCls, el);
             this._models.push(m);
             return this;
         }
@@ -301,8 +300,8 @@ export default class Collection {
      */
     contains(predicate) {
         const models = this.getModels();
-        for (let index = 0; index < models.length; index++) {
-            if (predicate === models[index]) {
+        for (const element of models) {
+            if (predicate === element) {
                 return true;
             }
         }

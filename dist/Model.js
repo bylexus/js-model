@@ -286,4 +286,19 @@ export default class Model {
         this.$ = Object.assign(Object.assign({}, props), this._dirtyProps);
     }
 }
+/**
+ * Creates a new instance of a specific Model, optionally
+ * defining properties of the new model instance.
+ *
+ * @param constr The Model instance class (constructor) function
+ * @param props (optional) An object with instance properties
+ * @returns The created and filled Model instance
+ */
+export function createModel(constr, props) {
+    const inst = new constr();
+    if (props) {
+        inst.set(props);
+    }
+    return inst;
+}
 //# sourceMappingURL=Model.js.map

@@ -1,7 +1,14 @@
 {
-    "name": "js-model",
+    "name": "@bylexus/js-model",
     "version": "0.0.1",
     "description": "A simple Model library",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "repository": {
+        "url": "https://github.com/bylexus/js-model.git",
+        "type": "github"
+    },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
