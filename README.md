@@ -7,13 +7,17 @@ with (but not only) reactive frameworks.
 - [Main goals of the library](#main-goals-of-the-library)
 - [Features](#features)
 - [Prerequisites](#prerequisites)
-- [Documentation](#documentation)
+- [User Documentation](#user-documentation)
   - [Installation](#installation)
   - [A first model](#a-first-model)
   - [A first collection](#a-first-collection)
   - [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
     - [The DataProxy interface](#the-dataproxy-interface)
     - [Example DataProxy](#example-dataproxy)
+- [Developer Documentation](#developer-documentation)
+  - [Dev setup](#dev-setup)
+  - [Build](#build)
+  - [Publish npm package](#publish-npm-package)
 
 
 ## What is js-model?
@@ -52,7 +56,7 @@ TBD
 
 ## Prerequisites
 
-## Documentation
+## User Documentation
 
 TBD. You will need to use a modern JS/TS environment, suporting ES Modules, or a packager like webpack, rollup etc.
 
@@ -261,6 +265,61 @@ class MyCollection extends Collection {
 Now if you call data fetching / storing / query functions on your models / collections, your apropriate Proxy methods will be called,
 where you are responsible to retrieve / send the data.
 
+## Developer Documentation
+
+### Dev setup
+
+Clone and run the first build:
+
+```sh
+$ git clone https://github.com/bylexus/js-model.git
+$ command -v nvm && nvm install && nvm use
+$ npm run build
+```
+
+### Build
+
+Building converts all `.ts` sources to `.js` files and type declarations (`.d.ts`).
+The build goes to the `dist/` folder.
+
+```sh
+$ command -v nvm && nvm install && nvm use
+$ npm run build
+```
+
+During development, you can also use the watch command:
+
+```sh
+$ npm run watch
+```
+
+### Publish npm package
+
+The npm package is not hosted on npmjs.com, instead it is hosted on the github.com package registry.
+
+To publish the package, you need a [Github Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with access to the repository.
+
+Configure your Access Token in a `.npmrc` file, either:
+
+* in your user home: `${HOME}/.npmrc`
+* in the project directory itself: `js-model/.npmrc`
+
+**MAKE SURE TO NEVER COMMIT THE FILE WITH THE TOKEN IN IT!**
+
+```txt
+# .npmrc:
+//npm.pkg.github.com/:_authToken=YOUR_ACCESS_TOKEN
+```
+
+Then, set a version, commit/tag and publish:
+
+```sh
+$ npm version [new-version]
+$ git add .
+$ git commit -m "New version ABC"
+$ git tag [new-version]
+$ npm publish
+```
 
 
 (c) 2023 Alexander Schenkel, alex-jsmodel@alexi.ch
