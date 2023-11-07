@@ -14,10 +14,12 @@ with (but not only) reactive frameworks.
   - [Implement a storage mechanism using DataProxy](#implement-a-storage-mechanism-using-dataproxy)
     - [The DataProxy interface](#the-dataproxy-interface)
     - [Example DataProxy](#example-dataproxy)
+  - [VueJS integration](#vuejs-integration)
 - [Developer Documentation](#developer-documentation)
   - [Dev setup](#dev-setup)
   - [Build](#build)
   - [Publish npm package](#publish-npm-package)
+- [Whishlist](#whishlist)
 
 
 ## What is js-model?
@@ -276,6 +278,56 @@ class MyCollection extends Collection {
 Now if you call data fetching / storing / query functions on your models / collections, your apropriate Proxy methods will be called,
 where you are responsible to retrieve / send the data.
 
+### VueJS integration
+
+The Model class can be used without special arrangements in a reactive VueJS application. For example,
+you can define your Model as a reactive variable and use it as reactive value:
+
+```js
+<script setup>
+import {ref} from 'vue';
+import {createModel} from 'js-model';
+
+const myModel = ref(createModel(MyModel, {foo: 'bar'}));
+</script>
+
+<template>
+  <div>{{myModel.foo}}</div>
+  <div><input v-model="myModel.foo" /></div>
+</template>
+```
+
+However, for Collections, VueJS can use the collection itself, but does not detect changes in it,
+as the internal array reference does not change (only its content).
+
+It is therefore neccessary to create a base Collection class that overcomes that problem:
+
+```ts
+class BaseCollection<T extends BaseModel> extends Collection<T> {
+    public constructor() {
+        super();
+        // here we override the internal _models array with a
+        // dynamic ref proxy version of VueJS:
+        const refModels:Ref<T[]> = ref([]);
+        this._models = refModels.value;
+    }
+}
+```
+
+With this setup, you can use your collections in a VueJS application:
+
+```ts
+<script setup lang="ts">
+import {ref} from 'vue';
+
+const myCollection = new BaseCollection<MyModel>();
+</script>
+
+<template>
+  <div v-for="model in myCollection.getModels()" :key="model.id">{{model.name}}</div>
+</template>
+```
+
 ## Developer Documentation
 
 ### Dev setup
@@ -332,6 +384,13 @@ $ git tag [new-version]
 $ npm publish
 ```
 
+## Whishlist
+
+- Server Total value available after Collection query:
+  A collection query fetching remote data should be able to return a server total,
+  if not all records are fetched.
+
 
 (c) 2023 Alexander Schenkel, alex-jsmodel@alexi.ch
+
 
